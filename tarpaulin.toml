@@ -38,3 +38,7 @@ skip-clean = false
 
 # Verbose output
 verbose = true
+
+[coverage]
+# Fail if coverage is below 20%
+fail-under = 20.0

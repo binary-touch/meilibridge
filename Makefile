@@ -122,7 +122,7 @@ validate:
 # Show current sync status
 status:
 	@echo "Checking MeiliBridge status..."
-	@curl -s http://localhost:7701/api/status || echo "API server not running"
+	@curl -s http://localhost:7701/status || echo "API server not running"
 
 # Cross-platform builds
 build-linux-arm64:
