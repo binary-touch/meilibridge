@@ -211,7 +211,7 @@ fn tokenize_parts(input: &str) -> Vec<String> {
             }
             ']' => {
                 if bracket_depth > 0 {
-                    bracket_depth -= 1;
+                    bracket_depth = bracket_depth.saturating_sub(1);
                 }
                 current.push(ch);
             }

@@ -150,6 +150,9 @@ atlassian-ide-plugin.xml
 # Cursive Clojure plugin
 .idea/replstate.xml
 
+# Copilot agent
+.idea/copilot.*
+
 # SonarLint plugin
 .idea/sonarlint/
 .idea/sonarlint.xml # see https://community.sonarsource.com/t/is-the-file-idea-idea-idea-sonarlint-xml-intended-to-be-under-source-control/121119
@@ -185,9 +188,12 @@ http-client.private.env.json
 # Agentic LLM Coders
 .claude
 .crush
+.gemini
 tasks/
 CLAUDE.md
 CRUSH.md
+GEMINI.md
+AGENTS.md
 
 # Project Specific
 config.yaml

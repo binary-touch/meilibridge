@@ -265,6 +265,20 @@ jobs:
         
         # Update CHANGELOG.md only
         sed -i "s/## \[Unreleased\]/## [Unreleased]\n\n## [$VERSION] - $DATE/" CHANGELOG.md
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Update Cargo.toml and Cargo.lock
+      run: |
+        VERSION="${{ needs.validate-version.outputs.version_without_v }}"
+        
+        # Update Cargo.toml
+        sed -i "s/^version = .*/version = \"$VERSION\"/" Cargo.toml
+        
+        # Update Cargo.lock by running cargo check
+        # This ensures the lock file is in sync with the new version
+        cargo check
     
     - name: Configure Git
       run: |
@@ -273,13 +287,13 @@ jobs:
     
     - name: Commit and push changes
       run: |
-        git add CHANGELOG.md
+        git add CHANGELOG.md Cargo.toml Cargo.lock
         if git diff --staged --quiet; then
           echo "No changes to commit"
         else
-          git commit -m "chore: update CHANGELOG.md for ${{ needs.validate-version.outputs.version }} release
+          git commit -m "chore: update version to ${{ needs.validate-version.outputs.version }}
 
-        Updates CHANGELOG.md with release date for version ${{ needs.validate-version.outputs.version }}.
+        Updates CHANGELOG.md and bumps version in Cargo.toml/lock for release ${{ needs.validate-version.outputs.version }}.
         [skip ci]"
           git push
         fi

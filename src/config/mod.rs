@@ -46,6 +46,7 @@ pub struct Config {
     pub meilisearch: MeilisearchConfig,
 
     /// Sync task definitions
+    #[serde(default)]
     pub sync_tasks: Vec<SyncTaskConfig>,
 
     /// Redis configuration for state management

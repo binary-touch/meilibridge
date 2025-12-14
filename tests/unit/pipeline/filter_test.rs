@@ -113,7 +113,7 @@ mod filter_tests {
     #[test]
     fn test_multiple_filter_criteria() {
         // Create events with different combinations
-        let events = vec![
+        let events = [
             create_test_event("users", EventType::Create),
             create_test_event("users", EventType::Update),
             create_test_event("posts", EventType::Create),
