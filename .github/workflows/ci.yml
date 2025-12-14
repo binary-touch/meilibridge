@@ -254,7 +254,7 @@ jobs:
     - name: Install tarpaulin
       run: |
         if ! command -v cargo-tarpaulin &> /dev/null; then
-          cargo install cargo-tarpaulin --version 0.33.0
+          cargo install cargo-tarpaulin --version 0.34.1 --locked
         fi
     
     - name: Generate coverage
