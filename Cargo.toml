@@ -2,7 +2,7 @@
 name = "meilibridge"
 version = "0.1.6"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.88"
 authors = ["Omkar Todkar"]
 description = "High-performance PostgreSQL to Meilisearch connector"
 license = "MIT"
