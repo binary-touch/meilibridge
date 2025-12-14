@@ -5,19 +5,22 @@ use chrono::Utc;
 
 /// Parse test_decoding message into an Event
 pub fn parse_test_decoding_message(lsn: String, message: &str) -> Result<Option<Event>> {
-    // Parse the operation type and table using split_once to handle colons in data
-    let (operation, rest) = match message.split_once(':') {
-        Some((op, rest)) => (op.trim(), rest.trim()),
-        None => return Ok(None),
-    };
-
-    // Extract table name
-    let table_parts: Vec<&str> = rest.split_whitespace().collect();
-    if table_parts.is_empty() {
+    if !message.starts_with("table ") {
         return Ok(None);
     }
 
-    let table_full = table_parts[0];
+    let remainder = message[6..].trim();
+    let (table_token, rest) = match remainder.split_once(':') {
+        Some((table, rest)) => (table.trim_end_matches(':'), rest.trim()),
+        None => return Ok(None),
+    };
+
+    let (operation_token, data_section) = match rest.split_once(':') {
+        Some((op, data)) => (op.trim(), data.trim()),
+        None => return Ok(None),
+    };
+
+    let table_full = table_token;
 
     // Parse schema and table from format: schema.table
     let (schema, table) = if let Some(dot_pos) = table_full.rfind('.') {
@@ -29,15 +32,15 @@ pub fn parse_test_decoding_message(lsn: String, message: &str) -> Result<Option<
     };
 
     // Determine event type
-    let event_type = match operation {
+    let event_type = match operation_token {
         "INSERT" => EventType::Create,
         "UPDATE" => EventType::Update,
         "DELETE" => EventType::Delete,
         _ => return Ok(None),
     };
 
-    // The remaining parts after the table name contain the data
-    let data_parts: Vec<&str> = rest.split_whitespace().skip(1).collect();
+    // Tokenize the remaining payload so quoted values (with spaces) stay intact
+    let data_parts = tokenize_parts(data_section);
 
     // Parse the data based on operation type
     let (_primary_key, data) = match event_type {
@@ -49,7 +52,7 @@ pub fn parse_test_decoding_message(lsn: String, message: &str) -> Result<Option<
 
     let cdc_event = CdcEvent {
         event_type,
-        table: table.to_string(),
+        table: table.trim_end_matches(':').to_string(),
         schema: schema.to_string(),
         data: match data {
             serde_json::Value::Object(map) => map.into_iter().collect(),
@@ -62,18 +65,18 @@ pub fn parse_test_decoding_message(lsn: String, message: &str) -> Result<Option<
     Ok(Some(Event::Cdc(cdc_event)))
 }
 
-fn parse_insert_data(parts: &[&str]) -> Result<(Option<String>, serde_json::Value)> {
-    // INSERT format: column1[type]:value1 column2[type]:value2 ...
+fn parse_insert_data(parts: &[String]) -> Result<(Option<String>, serde_json::Value)> {
     let mut fields = serde_json::Map::new();
     let mut primary_key = None;
 
     for part in parts {
-        if let Some((col_info, value)) = part.split_once(':') {
+        if let Some((col_info, value)) = split_first_colon(part) {
             let column = extract_column_name(col_info);
-            let parsed_value = parse_value(value);
+            let sanitized = sanitize_value(value);
+            let parsed_value = parse_value(&sanitized);
 
             if column == "id" && primary_key.is_none() {
-                primary_key = Some(value.to_string());
+                primary_key = Some(sanitized);
             }
 
             fields.insert(column, parsed_value);
@@ -83,30 +86,30 @@ fn parse_insert_data(parts: &[&str]) -> Result<(Option<String>, serde_json::Valu
     Ok((primary_key, serde_json::Value::Object(fields)))
 }
 
-fn parse_update_data(parts: &[&str]) -> Result<(Option<String>, serde_json::Value)> {
-    // UPDATE format: old-key: column1[type]:old_value new-key: column1[type]:new_value
+fn parse_update_data(parts: &[String]) -> Result<(Option<String>, serde_json::Value)> {
     let mut new_fields = serde_json::Map::new();
     let mut old_fields = serde_json::Map::new();
     let mut primary_key = None;
     let mut is_new_section = false;
 
     for part in parts {
-        if *part == "new-key:" {
+        if part == "new-key:" {
             is_new_section = true;
             continue;
         }
-        if *part == "old-key:" {
+        if part == "old-key:" {
             is_new_section = false;
             continue;
         }
 
-        if let Some((col_info, value)) = part.split_once(':') {
+        if let Some((col_info, value)) = split_first_colon(part) {
             let column = extract_column_name(col_info);
-            let parsed_value = parse_value(value);
+            let sanitized = sanitize_value(value);
+            let parsed_value = parse_value(&sanitized);
 
             if is_new_section {
                 if column == "id" && primary_key.is_none() {
-                    primary_key = Some(value.to_string());
+                    primary_key = Some(sanitized.clone());
                 }
                 new_fields.insert(column.clone(), parsed_value.clone());
             } else {
@@ -115,7 +118,6 @@ fn parse_update_data(parts: &[&str]) -> Result<(Option<String>, serde_json::Valu
         }
     }
 
-    // If we have new fields, use them; otherwise use old fields
     let data = if !new_fields.is_empty() {
         serde_json::Value::Object(new_fields)
     } else {
@@ -125,20 +127,20 @@ fn parse_update_data(parts: &[&str]) -> Result<(Option<String>, serde_json::Valu
     Ok((primary_key, data))
 }
 
-fn parse_delete_data(parts: &[&str]) -> Result<(Option<String>, serde_json::Value)> {
-    // DELETE format: column1[type]:value1 column2[type]:value2 ...
+fn parse_delete_data(parts: &[String]) -> Result<(Option<String>, serde_json::Value)> {
     let mut fields = serde_json::Map::new();
     let mut primary_key = None;
 
     for part in parts {
-        if let Some((col_info, value)) = part.split_once(':') {
+        if let Some((col_info, value)) = split_first_colon(part) {
             let column = extract_column_name(col_info);
+            let sanitized = sanitize_value(value);
 
             if column == "id" && primary_key.is_none() {
-                primary_key = Some(value.to_string());
+                primary_key = Some(sanitized.clone());
             }
 
-            fields.insert(column, parse_value(value));
+            fields.insert(column, parse_value(&sanitized));
         }
     }
 
@@ -146,16 +148,21 @@ fn parse_delete_data(parts: &[&str]) -> Result<(Option<String>, serde_json::Valu
 }
 
 fn extract_column_name(col_info: &str) -> String {
-    // Extract column name from format: column[type]
-    if let Some(bracket_pos) = col_info.find('[') {
-        col_info[..bracket_pos].to_string()
+    let trimmed = col_info.trim().trim_end_matches(':');
+    if let Some(bracket_pos) = trimmed.find('[') {
+        trimmed[..bracket_pos].to_string()
     } else {
-        col_info.to_string()
+        trimmed.to_string()
     }
 }
 
 fn parse_value(value: &str) -> serde_json::Value {
-    // Try to parse as number
+    let value = value.trim();
+
+    if value.is_empty() {
+        return serde_json::Value::Null;
+    }
+
     if let Ok(num) = value.parse::<i64>() {
         return serde_json::Value::Number(num.into());
     }
@@ -166,19 +173,112 @@ fn parse_value(value: &str) -> serde_json::Value {
         }
     }
 
-    // Try to parse as boolean
-    if value == "true" {
+    if value.eq_ignore_ascii_case("true") {
         return serde_json::Value::Bool(true);
     }
-    if value == "false" {
+    if value.eq_ignore_ascii_case("false") {
         return serde_json::Value::Bool(false);
     }
 
-    // Check for null
-    if value == "null" {
+    if value.eq_ignore_ascii_case("null") {
         return serde_json::Value::Null;
     }
 
-    // Otherwise, treat as string
     serde_json::Value::String(value.to_string())
+}
+
+fn tokenize_parts(input: &str) -> Vec<String> {
+    let mut tokens = Vec::new();
+    let mut current = String::new();
+    let mut in_quotes = false;
+    let mut chars = input.chars().peekable();
+    let mut bracket_depth = 0u32;
+
+    while let Some(ch) = chars.next() {
+        match ch {
+            '\'' => {
+                if in_quotes && chars.peek() == Some(&'\'') {
+                    current.push(ch);
+                    current.push(chars.next().unwrap());
+                } else {
+                    in_quotes = !in_quotes;
+                    current.push(ch);
+                }
+            }
+            '[' => {
+                bracket_depth = bracket_depth.saturating_add(1);
+                current.push(ch);
+            }
+            ']' => {
+                if bracket_depth > 0 {
+                    bracket_depth -= 1;
+                }
+                current.push(ch);
+            }
+            ' ' | '\t' | '\n' if !in_quotes && bracket_depth == 0 => {
+                if !current.is_empty() {
+                    tokens.push(current.trim().to_string());
+                    current.clear();
+                }
+            }
+            _ => current.push(ch),
+        }
+    }
+
+    if !current.is_empty() {
+        tokens.push(current.trim().to_string());
+    }
+
+    tokens.into_iter().filter(|t| !t.is_empty()).collect()
+}
+
+fn split_first_colon(part: &str) -> Option<(&str, &str)> {
+    part.split_once(':')
+        .map(|(left, right)| (left.trim(), right.trim()))
+}
+
+fn sanitize_value(raw: &str) -> String {
+    let trimmed = raw.trim();
+    if trimmed.starts_with('\'') && trimmed.ends_with('\'') && trimmed.len() >= 2 {
+        trimmed[1..trimmed.len() - 1].replace("''", "'")
+    } else {
+        trimmed.to_string()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::stream_event::Event;
+    use crate::models::EventType;
+
+    #[test]
+    fn parses_update_with_whitespace_values() {
+        let message = "table public.items: UPDATE: id[uuid]:'690594ad-bb6c-474c-9cd1-71451a133e68' name[text]:'Synced v4 Adidas Ultraboost 22' category[character varying]:'Fashion (รองเท้า)'";
+        let event = parse_test_decoding_message("0/0".to_string(), message)
+            .expect("parser result")
+            .expect("event");
+
+        match event {
+            Event::Cdc(cdc) => {
+                assert_eq!(cdc.event_type, EventType::Update);
+                let name = cdc
+                    .data
+                    .get("name")
+                    .expect("name field should exist")
+                    .as_str()
+                    .expect("name should be string");
+                assert_eq!(name, "Synced v4 Adidas Ultraboost 22");
+
+                let category = cdc
+                    .data
+                    .get("category")
+                    .expect("category field should exist")
+                    .as_str()
+                    .expect("category should be string");
+                assert_eq!(category, "Fashion (รองเท้า)");
+            }
+            _ => panic!("expected CDC event"),
+        }
+    }
 }

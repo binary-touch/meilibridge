@@ -378,6 +378,74 @@ impl PipelineOrchestrator {
         }
     }
 
+    fn build_table_index_map(config: &Config) -> HashMap<String, String> {
+        let mut map = HashMap::new();
+
+        for task in &config.sync_tasks {
+            if task.index.is_empty() || task.table.is_empty() {
+                continue;
+            }
+
+            let (schema_opt, table_name) = Self::parse_table_identifier(&task.table);
+
+            if let Some(schema) = schema_opt.as_deref() {
+                let key = Self::canonical_table_key(Some(schema), &table_name);
+                if !key.is_empty() {
+                    map.insert(key, task.index.clone());
+                }
+            }
+
+            let table_key = Self::canonical_table_key(None, &table_name);
+            if !table_key.is_empty() {
+                map.insert(table_key, task.index.clone());
+            }
+        }
+
+        map
+    }
+
+    fn parse_table_identifier(table: &str) -> (Option<String>, String) {
+        let trimmed = table.trim();
+        if trimmed.is_empty() {
+            return (None, String::new());
+        }
+
+        if let Some((schema, name)) = trimmed.split_once('.') {
+            let schema_clean = Self::sanitize_identifier(schema);
+            let table_clean = Self::sanitize_identifier(name);
+            (
+                if schema_clean.is_empty() {
+                    None
+                } else {
+                    Some(schema_clean)
+                },
+                table_clean,
+            )
+        } else {
+            (None, Self::sanitize_identifier(trimmed))
+        }
+    }
+
+    fn sanitize_identifier(identifier: &str) -> String {
+        identifier.trim().trim_matches('"').to_string()
+    }
+
+    fn canonical_table_key(schema: Option<&str>, table: &str) -> String {
+        let table_part = table.trim().trim_matches('"').to_lowercase();
+        if table_part.is_empty() {
+            return String::new();
+        }
+
+        match schema {
+            Some(schema) if !schema.trim().is_empty() => format!(
+                "{}.{}",
+                schema.trim().trim_matches('"').to_lowercase(),
+                table_part
+            ),
+            _ => table_part,
+        }
+    }
+
     /// Start the pipeline
     pub async fn start(&mut self) -> Result<()> {
         info!("Starting pipeline orchestrator");
@@ -766,11 +834,8 @@ impl PipelineOrchestrator {
                 .iter()
                 .map(|task| task.id.clone())
                 .collect();
-            let max_checkpoints = self
-                .config
-                .redis
-                .checkpoint_retention
-                .max_checkpoints_per_task;
+            let checkpoint_retention_config = self.config.redis.checkpoint_retention.clone();
+            let max_checkpoints = checkpoint_retention_config.max_checkpoints_per_task;
             let shutdown_rx = self.shutdown_tx.as_ref().unwrap().subscribe();
 
             let handle = tokio::spawn(async move {
@@ -877,16 +942,16 @@ impl PipelineOrchestrator {
         mut shutdown_rx: watch::Receiver<bool>,
         adaptive_batching_manager: Option<Arc<AdaptiveBatchingManager>>,
     ) {
+        let table_to_index = Self::build_table_index_map(&config);
+
+        let mut base_adapter = MeilisearchAdapter::new(config.meilisearch.clone(), table_to_index);
+
+        if let Some(manager) = adaptive_batching_manager {
+            base_adapter = base_adapter.with_adaptive_batching(manager, config.performance.clone());
+        }
+
         // Create destination adapter with adaptive batching if enabled
-        let mut destination_adapter = if let Some(manager) = adaptive_batching_manager {
-            Box::new(
-                MeilisearchAdapter::new(config.meilisearch.clone())
-                    .with_adaptive_batching(manager, config.performance.clone()),
-            ) as Box<dyn DestinationAdapter>
-        } else {
-            Box::new(MeilisearchAdapter::new(config.meilisearch.clone()))
-                as Box<dyn DestinationAdapter>
-        };
+        let mut destination_adapter: Box<dyn DestinationAdapter> = Box::new(base_adapter);
 
         // Connect to destination
         info!("Connecting to destination");

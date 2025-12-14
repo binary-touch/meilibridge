@@ -55,6 +55,8 @@ RUN apt-get update && \
     ca-certificates \
     libssl3 \
     libpq5 \
+    gettext-base \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
@@ -83,16 +85,11 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 # Set user
 USER meilibridge
 
-# Default port environment variables
+# Default API port
 ENV MEILIBRIDGE_API_PORT=7701
-ENV MEILIBRIDGE_METRICS_PORT=7702
 
-# Expose ports (these are just documentation, actual binding is controlled by the app)
-# API port
+# Expose API port (documentation only; binding handled by runtime)
 EXPOSE ${MEILIBRIDGE_API_PORT}
-# Metrics port (future implementation)
-EXPOSE ${MEILIBRIDGE_METRICS_PORT}
-# Reserved for future features (7703-7710)
 
 # Set working directory
 WORKDIR /var/lib/meilibridge

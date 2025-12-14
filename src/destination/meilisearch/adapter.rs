@@ -20,12 +20,13 @@ pub struct MeilisearchAdapter {
     client: Option<ProtectedMeilisearchClient>,
     batch_processor: BatchProcessor,
     table_primary_keys: HashMap<String, String>,
+    table_to_index: HashMap<String, String>,
     adaptive_batching: Option<Arc<AdaptiveBatchingManager>>,
     performance_config: PerformanceConfig,
 }
 
 impl MeilisearchAdapter {
-    pub fn new(config: MeilisearchConfig) -> Self {
+    pub fn new(config: MeilisearchConfig, table_to_index: HashMap<String, String>) -> Self {
         let primary_key = config.primary_key.clone();
 
         // Initialize default primary keys for known tables
@@ -39,6 +40,7 @@ impl MeilisearchAdapter {
             client: None,
             batch_processor: BatchProcessor::new(primary_key),
             table_primary_keys,
+            table_to_index,
             adaptive_batching: None,
             performance_config: PerformanceConfig::default(),
         }
@@ -58,6 +60,62 @@ impl MeilisearchAdapter {
         self.client.as_ref().ok_or_else(|| {
             MeiliBridgeError::Meilisearch("Not connected to Meilisearch".to_string())
         })
+    }
+
+    fn resolve_index_name(&self, schema: Option<&str>, table: &str, fallback: &str) -> String {
+        if let Some(schema) = schema {
+            let key = Self::canonical_table_key(Some(schema), table);
+            if let Some(index) = self.table_to_index.get(&key) {
+                return index.clone();
+            }
+        }
+
+        let table_key = Self::canonical_table_key(None, table);
+        if let Some(index) = self.table_to_index.get(&table_key) {
+            return index.clone();
+        }
+
+        let (fallback_schema, fallback_table) = Self::split_table_identifier(fallback);
+        if let Some(schema) = fallback_schema.as_deref() {
+            let fb_key = Self::canonical_table_key(Some(schema), &fallback_table);
+            if let Some(index) = self.table_to_index.get(&fb_key) {
+                return index.clone();
+            }
+        }
+
+        let fb_table_key = Self::canonical_table_key(None, &fallback_table);
+        if let Some(index) = self.table_to_index.get(&fb_table_key) {
+            return index.clone();
+        }
+
+        fallback.to_string()
+    }
+
+    fn split_table_identifier(table: &str) -> (Option<String>, String) {
+        let trimmed = table.trim();
+        if let Some((schema, name)) = trimmed.split_once('.') {
+            let schema_clean = Self::sanitize_identifier(schema);
+            let table_clean = Self::sanitize_identifier(name);
+            (Some(schema_clean), table_clean)
+        } else {
+            (None, Self::sanitize_identifier(trimmed))
+        }
+    }
+
+    fn sanitize_identifier(identifier: &str) -> String {
+        identifier.trim().trim_matches('"').to_string()
+    }
+
+    fn canonical_table_key(schema: Option<&str>, table: &str) -> String {
+        let table_part = table.trim().trim_matches('"').to_lowercase();
+        match schema {
+            Some(schema) if !schema.trim().is_empty() => format!(
+                "{}.{}",
+                schema.trim().trim_matches('"').to_lowercase(),
+                table_part
+            ),
+            _ => table_part,
+        }
     }
 
     async fn get_or_create_index(
@@ -165,13 +223,18 @@ impl DestinationAdapter for MeilisearchAdapter {
         let mut result = SyncResult::new();
         let mut last_position = None;
 
-        // Group events by index
+        // Group events by index derived from the configured task mapping
         let mut events_by_index: HashMap<String, Vec<Event>> = HashMap::new();
 
         for event in events {
             let index_name = match &event {
-                Event::Cdc(cdc) => cdc.table.clone(), // Use table name as index name
-                Event::FullSync { table, .. } => table.clone(),
+                Event::Cdc(cdc) => {
+                    self.resolve_index_name(Some(&cdc.schema), &cdc.table, &cdc.table)
+                }
+                Event::FullSync { table, .. } => {
+                    let (schema, table_name) = Self::split_table_identifier(table);
+                    self.resolve_index_name(schema.as_deref(), &table_name, table)
+                }
                 _ => continue,
             };
 

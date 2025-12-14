@@ -1,8 +1,6 @@
+use super::parse_test_decoding_message;
 use crate::error::{MeiliBridgeError, Result};
-use crate::models::{Event, EventType};
-use chrono::Utc;
-use serde_json::json;
-use std::collections::HashMap;
+use crate::models::Event;
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio_postgres::Client;
@@ -142,18 +140,26 @@ impl ReplicationConsumer {
                                     lsn, xid, data
                                 );
 
-                                // Parse test_decoding format
-                                if let Some(event) = parse_test_decoding_message(&data) {
-                                    debug!("CDC: Successfully parsed event: {:?}", event);
-                                    match tx.send(Ok(event)).await {
-                                        Ok(_) => debug!("CDC: Event sent to coordinator"),
-                                        Err(_) => {
-                                            info!("CDC: Replication consumer stopping - channel closed");
-                                            return;
+                                match parse_test_decoding_message(lsn.clone(), &data) {
+                                    Ok(Some(event)) => {
+                                        debug!("CDC: Successfully parsed event: {:?}", event);
+                                        match tx.send(Ok(event)).await {
+                                            Ok(_) => debug!("CDC: Event sent to coordinator"),
+                                            Err(_) => {
+                                                info!("CDC: Replication consumer stopping - channel closed");
+                                                return;
+                                            }
                                         }
                                     }
-                                } else {
-                                    warn!("CDC: Failed to parse test_decoding message: {}", data);
+                                    Ok(None) => {
+                                        trace!("CDC: Message did not produce an event");
+                                    }
+                                    Err(err) => {
+                                        warn!(
+                                            "CDC: Failed to parse test_decoding message: {} ({})",
+                                            data, err
+                                        );
+                                    }
                                 }
                             }
                         } else {
@@ -207,269 +213,5 @@ impl ReplicationConsumer {
         if let Some(tx) = self.shutdown_tx.take() {
             let _ = tx.send(());
         }
-    }
-}
-
-/// Parse test_decoding format messages
-fn parse_test_decoding_message(data: &str) -> Option<Event> {
-    // test_decoding format examples:
-    // BEGIN 605
-    // table public.users: INSERT: id[integer]:1 email[text]:'test@example.com' ...
-    // COMMIT 605
-
-    debug!("Parser: Processing message: {}", data);
-
-    // Skip transaction control messages
-    if data.starts_with("BEGIN") || data.starts_with("COMMIT") {
-        debug!("Parser: Skipping transaction control message");
-        return None;
-    }
-
-    // Parse table operations
-    if !data.starts_with("table ") {
-        debug!("Parser: Message does not start with 'table', skipping");
-        return None;
-    }
-
-    let parts: Vec<&str> = data.splitn(3, ':').collect();
-    if parts.len() < 3 {
-        warn!("Invalid test_decoding message format: {}", data);
-        return None;
-    }
-
-    // Parse table info
-    let table_info = parts[0].trim();
-    let table_parts: Vec<&str> = table_info[6..].split('.').collect();
-    if table_parts.len() != 2 {
-        return None;
-    }
-
-    let schema = table_parts[0];
-    let table = table_parts[1];
-
-    // Parse operation
-    let operation = parts[1].trim();
-    let event_type = match operation {
-        "INSERT" => EventType::Create,
-        "UPDATE" => EventType::Update,
-        "DELETE" => EventType::Delete,
-        _ => {
-            warn!("Unknown operation type: {}", operation);
-            return None;
-        }
-    };
-
-    // Parse data fields
-    let data_part = parts[2].trim();
-    let data_map = parse_test_decoding_fields(data_part);
-
-    let cdc_event = crate::models::CdcEvent {
-        event_type: event_type.clone(),
-        table: table.to_string(),
-        schema: schema.to_string(),
-        data: data_map.clone(),
-        timestamp: Utc::now(),
-        position: None,
-    };
-
-    debug!(
-        "Parser: Created CdcEvent - type: {:?}, schema: {}, table: {}, fields: {}",
-        event_type,
-        schema,
-        table,
-        data_map.len()
-    );
-
-    let event = Event::Cdc(cdc_event);
-    debug!("Parser: Returning Event::Cdc");
-
-    Some(event)
-}
-
-fn parse_test_decoding_fields(data: &str) -> HashMap<String, serde_json::Value> {
-    let mut result = HashMap::new();
-    let mut current_field = String::new();
-    let mut current_type = String::new();
-    let mut current_value = String::new();
-    let mut state = ParseState::Name;
-    let mut in_quotes = false;
-    let mut escape_next = false;
-
-    #[derive(Debug)]
-    enum ParseState {
-        Name,
-        Type,
-        Value,
-    }
-
-    for ch in data.chars() {
-        if escape_next {
-            current_value.push(ch);
-            escape_next = false;
-            continue;
-        }
-
-        match state {
-            ParseState::Name => {
-                if ch == '[' {
-                    state = ParseState::Type;
-                } else if ch == ' ' && current_field.is_empty() {
-                    // Skip leading spaces
-                } else {
-                    current_field.push(ch);
-                }
-            }
-            ParseState::Type => {
-                if ch == ']' {
-                    state = ParseState::Value;
-                } else {
-                    current_type.push(ch);
-                }
-            }
-            ParseState::Value => {
-                if ch == ':' && current_value.is_empty() {
-                    // Skip the colon separator
-                } else if ch == '\'' && !in_quotes {
-                    in_quotes = true;
-                } else if ch == '\'' && in_quotes {
-                    in_quotes = false;
-                } else if ch == '\\' && in_quotes {
-                    escape_next = true;
-                } else if ch == ' ' && !in_quotes && !current_value.is_empty() {
-                    // Field complete
-                    let value = convert_value(&current_value, &current_type);
-                    result.insert(current_field.clone(), value);
-
-                    // Reset for next field
-                    current_field.clear();
-                    current_type.clear();
-                    current_value.clear();
-                    state = ParseState::Name;
-                } else {
-                    current_value.push(ch);
-                }
-            }
-        }
-    }
-
-    // Handle last field
-    if !current_field.is_empty() && !current_value.is_empty() {
-        let value = convert_value(&current_value, &current_type);
-        result.insert(current_field, value);
-    }
-
-    result
-}
-
-fn convert_value(value: &str, type_name: &str) -> serde_json::Value {
-    // Handle NULL values
-    if value == "null" {
-        return json!(null);
-    }
-
-    // Convert based on type name
-    match type_name {
-        "integer" | "bigint" | "smallint" => value
-            .parse::<i64>()
-            .map(|n| json!(n))
-            .unwrap_or_else(|_| json!(value)),
-        "real" | "double precision" | "numeric" => value
-            .parse::<f64>()
-            .map(|n| json!(n))
-            .unwrap_or_else(|_| json!(value)),
-        "boolean" => {
-            json!(value == "t" || value == "true")
-        }
-        "json" | "jsonb" => serde_json::from_str(value).unwrap_or_else(|_| json!(value)),
-        // Handle array types
-        t if t.ends_with("[]") || t.contains("array") => {
-            // Try to parse as PostgreSQL array format
-            if value.starts_with('{') && value.ends_with('}') {
-                parse_postgres_array(value, t)
-            } else {
-                json!(value)
-            }
-        }
-        _ => {
-            // For text and other types, return as string
-            json!(value)
-        }
-    }
-}
-
-/// Parse PostgreSQL array string representation
-fn parse_postgres_array(value: &str, type_name: &str) -> serde_json::Value {
-    // Remove the curly braces
-    let content = &value[1..value.len() - 1];
-    if content.is_empty() {
-        return json!([]);
-    }
-
-    // Simple parser for array elements
-    let mut elements = Vec::new();
-    let mut current = String::new();
-    let mut in_quotes = false;
-    let mut escape_next = false;
-
-    for ch in content.chars() {
-        if escape_next {
-            current.push(ch);
-            escape_next = false;
-            continue;
-        }
-
-        match ch {
-            '\\' if in_quotes => escape_next = true,
-            '"' => in_quotes = !in_quotes,
-            ',' if !in_quotes => {
-                elements.push(parse_array_element(&current, type_name));
-                current.clear();
-            }
-            _ => current.push(ch),
-        }
-    }
-
-    // Don't forget the last element
-    if !current.is_empty() {
-        elements.push(parse_array_element(&current, type_name));
-    }
-
-    json!(elements)
-}
-
-/// Parse a single array element
-fn parse_array_element(element: &str, array_type: &str) -> serde_json::Value {
-    let trimmed = element.trim();
-
-    // Handle NULL
-    if trimmed == "NULL" {
-        return json!(null);
-    }
-
-    // Remove quotes if present
-    let unquoted = if trimmed.starts_with('"') && trimmed.ends_with('"') {
-        &trimmed[1..trimmed.len() - 1]
-    } else {
-        trimmed
-    };
-
-    // Determine element type from array type
-    let element_type = array_type.trim_end_matches("[]").trim_end_matches(" array");
-
-    // Convert the element based on its type
-    match element_type {
-        "integer" | "bigint" | "smallint" => unquoted
-            .parse::<i64>()
-            .map(|n| json!(n))
-            .unwrap_or_else(|_| json!(unquoted)),
-        "real" | "double precision" | "numeric" => unquoted
-            .parse::<f64>()
-            .map(|n| json!(n))
-            .unwrap_or_else(|_| json!(unquoted)),
-        "boolean" => {
-            json!(unquoted == "t" || unquoted == "true")
-        }
-        "json" | "jsonb" => serde_json::from_str(unquoted).unwrap_or_else(|_| json!(unquoted)),
-        _ => json!(unquoted),
     }
 }
