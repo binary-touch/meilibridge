@@ -72,8 +72,8 @@ Get MeiliBridge running in under 2 minutes!
 ### Prerequisites
 
 - PostgreSQL 10+ with logical replication enabled
-- Meilisearch 1.0+ instance
-- Docker (recommended) or Rust 1.70+ (for manual build)
+- Meilisearch 1.12+ instance
+- Docker (recommended) or Rust 1.82+ (for manual build)
 
 ### PostgreSQL Setup
 
@@ -362,7 +362,7 @@ Available metrics:
 - `GET /health` - Overall system health
 - `GET /health/liveness` - Kubernetes liveness probe
 - `GET /health/readiness` - Kubernetes readiness probe
-- `GET /health/:component` - Component-specific health (postgresql, meilisearch, redis)
+- `GET /health/{component}` - Component-specific health (postgresql, meilisearch, redis)
 
 ### Grafana Dashboard
 
@@ -378,14 +378,14 @@ Import our [Grafana dashboard](monitoring/grafana-dashboard.json) for visualizin
 
 #### Sync Task Management
 - `GET /tasks` - List all sync tasks
-- `GET /tasks/:id` - Get sync task details
+- `GET /tasks/{id}` - Get sync task details
 - `POST /tasks` - Create new sync task
-- `PUT /tasks/:id` - Update sync task
-- `DELETE /tasks/:id` - Delete sync task
-- `POST /tasks/:id/pause` - Pause sync task
-- `POST /tasks/:id/resume` - Resume sync task
-- `POST /tasks/:id/full-sync` - Trigger full table sync
-- `GET /tasks/:id/stats` - Get task statistics
+- `PUT /tasks/{id}` - Update sync task
+- `DELETE /tasks/{id}` - Delete sync task
+- `POST /tasks/{id}/pause` - Pause sync task
+- `POST /tasks/{id}/resume` - Resume sync task
+- `POST /tasks/{id}/full-sync` - Trigger full table sync
+- `GET /tasks/{id}/stats` - Get task statistics
 
 #### CDC Control
 - `POST /cdc/pause` - Pause all CDC processing
@@ -394,7 +394,7 @@ Import our [Grafana dashboard](monitoring/grafana-dashboard.json) for visualizin
 
 #### Dead Letter Queue
 - `GET /dead-letters` - Get DLQ statistics
-- `POST /dead-letters/:task_id/reprocess` - Reprocess failed events
+- `POST /dead-letters/{task_id}/reprocess` - Reprocess failed events
 
 #### Cache Management
 - `GET /cache/stats` - Get statement cache statistics
