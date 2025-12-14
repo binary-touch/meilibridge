@@ -9,7 +9,7 @@ env:
   RUST_BACKTRACE: 1
   RUSTFLAGS: "-D warnings"
   CARGO_INCREMENTAL: 0
-  RUST_VERSION: "1.82"
+  RUST_VERSION: "1.85"
 
 jobs:
   # Security audit for dependencies
@@ -100,7 +100,7 @@ jobs:
     - name: Read MSRV from Cargo.toml
       id: msrv
       run: |
-        MSRV=$(grep -oP 'rust-version = "\K[^"]+' Cargo.toml || echo "1.82")
+        MSRV=$(grep -oP 'rust-version = "\K[^"]+' Cargo.toml || echo "1.85")
         echo "msrv=$MSRV" >> $GITHUB_OUTPUT
     
     - name: Install Rust ${{ steps.msrv.outputs.msrv }}
