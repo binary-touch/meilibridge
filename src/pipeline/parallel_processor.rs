@@ -385,27 +385,19 @@ impl WorkStealingCoordinator {
             Some((small_table, small_proc, small_size)),
             Some((large_table, large_proc, large_size)),
         ) = (queue_info.first(), queue_info.last())
+            && *large_size > *small_size + 100
         {
-            if *large_size > *small_size + 100 {
-                // Only steal if significant imbalance
-                let steal_count = (large_size - small_size) / 2;
-                let stolen = large_proc.steal_events(steal_count).await;
+            // Only steal if significant imbalance
+            debug!(
+                "Attempting work stealing: {} ({}) -> {} ({})",
+                large_table, large_size, small_table, small_size
+            );
 
-                if !stolen.is_empty() {
-                    debug!(
-                        "Work stealing: Moved {} events from '{}' to '{}'",
-                        stolen.len(),
-                        large_table,
-                        small_table
-                    );
-
-                    // Record metrics
-                    metrics::WORK_STEALING_OPERATIONS
-                        .with_label_values(&[large_table, small_table])
-                        .inc();
-
-                    small_proc.enqueue_events(stolen).await;
-                }
+            // Try to steal a batch from the largest queue
+            let stolen = large_proc.steal_events(50).await;
+            if !stolen.is_empty() {
+                debug!("Stole {} events from {}", stolen.len(), large_table);
+                small_proc.enqueue_events(stolen).await;
             }
         }
     }

@@ -49,7 +49,7 @@ byteorder = "1.5"
 redis = { version = "1.0.1", features = ["tokio-comp", "connection-manager"] }
 
 # System monitoring
-sysinfo = "0.36.1"
+sysinfo = "0.37.2"
 
 # Meilisearch
 meilisearch-sdk = "0.31.0"

@@ -73,7 +73,7 @@ Get MeiliBridge running in under 2 minutes!
 
 - PostgreSQL 10+ with logical replication enabled
 - Meilisearch 1.12+ instance
-- Docker (recommended) or Rust 1.85+ (for manual build)
+- Docker (recommended) or Rust 1.88+ (for manual build)
 
 ### PostgreSQL Setup
 

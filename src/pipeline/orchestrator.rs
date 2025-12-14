@@ -581,7 +581,7 @@ impl PipelineOrchestrator {
                                     if let Err(e) = checkpoint_manager
                                         .cleanup_checkpoints(
                                             active_task_ids.clone(),
-                                            checkpoint_retention_config.max_checkpoints_per_task,
+                                            100, // Max checkpoints per task
                                         )
                                         .await
                                     {

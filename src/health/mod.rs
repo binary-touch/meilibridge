@@ -276,8 +276,10 @@ impl HealthCheck for RedisHealthCheck {
                                     {
                                         if let Some(version) = version_line.split(':').nth(1) {
                                             result = result.with_detail(
-                                                "version",
-                                                serde_json::json!(version.trim()),
+                                                "redis_version",
+                                                serde_json::Value::String(
+                                                    version.trim().to_string(),
+                                                ),
                                             );
                                         }
                                     }

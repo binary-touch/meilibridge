@@ -21,7 +21,7 @@ This guide covers installation, setup, and deployment of MeiliBridge for both de
 - **Network**: Stable internet connection for package downloads
 
 ### Required Software
-- **Rust**: 1.85.0 or higher
+- **Rust**: 1.88 or higher
 - **PostgreSQL**: 10+ with logical replication support
 - **Meilisearch**: 1.12+ (destination database)
 - **Redis**: 6.0+ (for checkpoint storage and dead letter queue)

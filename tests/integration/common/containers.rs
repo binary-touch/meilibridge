@@ -1,4 +1,5 @@
 // Test container utilities
+#![allow(clippy::collapsible_if)]
 
 use std::borrow::Cow;
 use std::collections::HashMap;

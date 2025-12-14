@@ -1,6 +1,6 @@
 # Multi-stage build for optimal image size
 # Build stage
-FROM rust:1.85-bookworm AS builder
+FROM rust:1.88-bookworm AS builder
 
 # Add labels for metadata
 ARG BUILD_DATE

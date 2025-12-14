@@ -54,7 +54,6 @@ impl FieldMapper {
                         if let Some(obj) = data.as_object() {
                             let data_map: HashMap<String, Value> =
                                 obj.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
-
                             let mapped = self.map_fields(data_map, field_mappings)?;
                             data = Value::Object(mapped.into_iter().collect());
                         }

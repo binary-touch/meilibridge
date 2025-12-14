@@ -73,11 +73,10 @@ impl WalConsumer {
 
                                 // Parse the logical decoding message
                                 if let Some(event) = parse_logical_decoding_message(&data, &parser)
+                                    && tx.send(Ok(event)).await.is_err()
                                 {
-                                    if tx.send(Ok(event)).await.is_err() {
-                                        info!("WAL consumer stopping - channel closed");
-                                        return;
-                                    }
+                                    info!("WAL consumer stopping - channel closed");
+                                    return;
                                 }
 
                                 last_lsn = lsn;

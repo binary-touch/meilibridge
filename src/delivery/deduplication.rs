@@ -92,7 +92,7 @@ impl EventDeduplicator {
                     if *count == 1 {
                         self.key_set.remove(&oldest_key);
                     } else {
-                        self.key_set.insert(oldest_key.clone(), count - 1);
+                        self.key_set.insert(oldest_key, count - 1);
                     }
                 }
                 self.stats.window_evictions += 1;

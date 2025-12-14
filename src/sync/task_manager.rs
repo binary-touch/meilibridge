@@ -269,12 +269,12 @@ impl SyncTaskManager {
         info!("Pausing task '{}'", task_id);
 
         let mut statuses_map = statuses.write().await;
-        if let Some(status) = statuses_map.get_mut(task_id) {
-            if status.state == TaskState::Running {
-                status.state = TaskState::Paused;
-                status.last_updated = chrono::Utc::now();
-                info!("Task '{}' state changed to Paused", task_id);
-            }
+        if let Some(status) = statuses_map.get_mut(task_id)
+            && status.state == TaskState::Running
+        {
+            status.state = TaskState::Paused;
+            status.last_updated = chrono::Utc::now();
+            info!("Task '{}' state changed to Paused", task_id);
         }
     }
 
@@ -283,12 +283,12 @@ impl SyncTaskManager {
         info!("Resuming task '{}'", task_id);
 
         let mut statuses_map = statuses.write().await;
-        if let Some(status) = statuses_map.get_mut(task_id) {
-            if status.state == TaskState::Paused {
-                status.state = TaskState::Running;
-                status.last_updated = chrono::Utc::now();
-                info!("Task '{}' state changed to Running", task_id);
-            }
+        if let Some(status) = statuses_map.get_mut(task_id)
+            && status.state == TaskState::Paused
+        {
+            status.state = TaskState::Running;
+            status.last_updated = chrono::Utc::now();
+            info!("Task '{}' state changed to Running", task_id);
         }
     }
 

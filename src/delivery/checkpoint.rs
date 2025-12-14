@@ -224,10 +224,10 @@ impl TransactionalCheckpoint {
 
         if let Some(cp) = checkpoint {
             // Check if checkpoint is committed
-            if let Some(committed) = cp.metadata.get("committed").and_then(|v| v.as_bool()) {
-                if committed {
-                    return Ok(Some(cp));
-                }
+            if let Some(committed) = cp.metadata.get("committed").and_then(|v| v.as_bool())
+                && committed
+            {
+                return Ok(Some(cp));
             }
         }
 

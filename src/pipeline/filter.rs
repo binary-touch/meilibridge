@@ -123,17 +123,17 @@ impl EventFilter {
     /// Check if a table is allowed
     fn is_table_allowed(&self, table: &str) -> bool {
         // If whitelist is defined, table must be in it
-        if let Some(whitelist) = &self.config.tables.whitelist {
-            if !whitelist.contains(&table.to_string()) {
-                return false;
-            }
+        if let Some(whitelist) = &self.config.tables.whitelist
+            && !whitelist.contains(&table.to_string())
+        {
+            return false;
         }
 
         // If blacklist is defined, table must not be in it
-        if let Some(blacklist) = &self.config.tables.blacklist {
-            if blacklist.contains(&table.to_string()) {
-                return false;
-            }
+        if let Some(blacklist) = &self.config.tables.blacklist
+            && blacklist.contains(&table.to_string())
+        {
+            return false;
         }
 
         true
