@@ -198,7 +198,7 @@ fn load_config(path: Option<&str>) -> Result<Config> {
         }
         None => {
             info!("Loading configuration from default locations");
-            ConfigLoader::load()
+            ConfigLoader::load(None)
         }
     }
 }
@@ -287,7 +287,7 @@ async fn run_service(config: Config) -> Result<()> {
         .with_health_registry(health_registry.clone());
 
     // If using PostgreSQL, create a statement cache reference
-    if let Some(meilibridge::config::SourceConfig::PostgreSQL(ref pg_config)) = &config.source {
+    if let Some(meilibridge::config::SourceConfig::PostgreSQL(pg_config)) = &config.source {
         let cache_config = meilibridge::source::postgres::CacheConfig {
             max_size: pg_config.statement_cache.max_size,
             enabled: pg_config.statement_cache.enabled,
@@ -300,7 +300,7 @@ async fn run_service(config: Config) -> Result<()> {
 
     // Also check multiple sources for PostgreSQL (use first one found)
     for named_source in &config.sources {
-        if let meilibridge::config::SourceConfig::PostgreSQL(ref pg_config) = &named_source.config {
+        if let meilibridge::config::SourceConfig::PostgreSQL(pg_config) = &named_source.config {
             let cache_config = meilibridge::source::postgres::CacheConfig {
                 max_size: pg_config.statement_cache.max_size,
                 enabled: pg_config.statement_cache.enabled,

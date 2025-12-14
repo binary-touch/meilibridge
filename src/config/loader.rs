@@ -7,11 +7,13 @@ use std::path::Path;
 pub struct ConfigLoader;
 
 impl ConfigLoader {
-    pub fn load() -> Result<Config> {
+    pub fn load(path: Option<&str>) -> Result<Config> {
         let mut builder = ConfigBuilder::builder();
 
         // Load from config file if specified
-        if let Ok(config_path) = env::var("CONFIG_PATH") {
+        let config_path = path.map(String::from).or_else(|| env::var("CONFIG_PATH").ok());
+
+        if let Some(config_path) = config_path {
             builder = builder.add_source(File::with_name(&config_path));
         } else {
             // Try to load default config files
@@ -139,8 +141,7 @@ impl ConfigLoader {
 
     /// Load configuration from a specific file
     pub fn load_from_file(path: &str) -> Result<Config> {
-        env::set_var("CONFIG_PATH", path);
-        Self::load()
+        Self::load(Some(path))
     }
 
     /// Create a sample configuration file

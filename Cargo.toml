@@ -1,8 +1,8 @@
 [package]
 name = "meilibridge"
 version = "0.1.6"
-edition = "2021"
-rust-version = "1.82"
+edition = "2024"
+rust-version = "1.85"
 authors = ["Omkar Todkar"]
 description = "High-performance PostgreSQL to Meilisearch connector"
 license = "MIT"
@@ -49,7 +49,7 @@ byteorder = "1.5"
 redis = { version = "1.0.1", features = ["tokio-comp", "connection-manager"] }
 
 # System monitoring
-sysinfo = "0.37.2"
+sysinfo = "0.36.1"
 
 # Meilisearch
 meilisearch-sdk = "0.31.0"
