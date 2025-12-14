@@ -440,10 +440,12 @@ async fn test_dlq_operations() {
 
     // DLQ operations should fail before starting
     assert!(orchestrator.get_dlq_statistics().await.is_err());
-    assert!(orchestrator
-        .reprocess_dlq_entries("task1", Some(10))
-        .await
-        .is_err());
+    assert!(
+        orchestrator
+            .reprocess_dlq_entries("task1", Some(10))
+            .await
+            .is_err()
+    );
     assert!(orchestrator.clear_dlq_task("task1").await.is_err());
 }
 

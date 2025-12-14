@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::fs;
 use tokio::io::AsyncWriteExt;
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::{RwLock, mpsc};
 use tracing::{debug, error, info, warn};
 
 /// Dead letter entry

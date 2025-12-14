@@ -2,8 +2,8 @@
 
 use crate::common::fixtures::*;
 use crate::common::setup_postgres_cdc;
-use testcontainers_modules::postgres::Postgres;
 use testcontainers::runners::AsyncRunner;
+use testcontainers_modules::postgres::Postgres;
 
 #[cfg(test)]
 mod connection_tests {
@@ -64,7 +64,7 @@ mod connection_tests {
     #[tokio::test]
     async fn test_connection_with_invalid_credentials() {
         use crate::common::containers::{start_postgres_with_cdc, wait_for_postgres};
-        
+
         let postgres = start_postgres_with_cdc().await;
         let port = postgres.get_host_port_ipv4(5432).await.unwrap();
 
@@ -98,7 +98,11 @@ mod connection_tests {
 
     #[tokio::test]
     async fn test_ssl_connection_modes() {
-        let postgres = Postgres::default().with_db_name("testdb").start().await.unwrap();
+        let postgres = Postgres::default()
+            .with_db_name("testdb")
+            .start()
+            .await
+            .unwrap();
         let port = postgres.get_host_port_ipv4(5432).await.unwrap();
         let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
 
@@ -113,7 +117,11 @@ mod connection_tests {
 
     #[tokio::test]
     async fn test_connection_parameter_validation() {
-        let postgres = Postgres::default().with_db_name("testdb").start().await.unwrap();
+        let postgres = Postgres::default()
+            .with_db_name("testdb")
+            .start()
+            .await
+            .unwrap();
         let port = postgres.get_host_port_ipv4(5432).await.unwrap();
 
         // Test various connection string formats
@@ -136,7 +144,11 @@ mod connection_tests {
 
     #[tokio::test]
     async fn test_reconnection_after_disconnect() {
-        let postgres = Postgres::default().with_db_name("testdb").start().await.unwrap();
+        let postgres = Postgres::default()
+            .with_db_name("testdb")
+            .start()
+            .await
+            .unwrap();
         let port = postgres.get_host_port_ipv4(5432).await.unwrap();
         let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
 
@@ -181,7 +193,11 @@ mod connection_tests {
 
     #[tokio::test]
     async fn test_connection_with_different_databases() {
-        let postgres = Postgres::default().with_db_name("testdb").start().await.unwrap();
+        let postgres = Postgres::default()
+            .with_db_name("testdb")
+            .start()
+            .await
+            .unwrap();
         let port = postgres.get_host_port_ipv4(5432).await.unwrap();
 
         // Connect to default database first

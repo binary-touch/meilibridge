@@ -1,6 +1,6 @@
 // Advanced unit tests for event deduplication
 
-use meilibridge::delivery::deduplication::{compare_lsn, DeduplicationKey, EventDeduplicator};
+use meilibridge::delivery::deduplication::{DeduplicationKey, EventDeduplicator, compare_lsn};
 
 #[cfg(test)]
 mod deduplication_tests {

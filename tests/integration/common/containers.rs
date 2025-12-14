@@ -25,7 +25,10 @@ impl TestContainers {
 
     pub async fn postgres_url(&self) -> String {
         if let Some(container) = &self.postgres {
-            let port = container.get_host_port_ipv4(5432).await.expect("Failed to get port");
+            let port = container
+                .get_host_port_ipv4(5432)
+                .await
+                .expect("Failed to get port");
             format!("postgresql://postgres:postgres@localhost:{}/postgres", port)
         } else {
             panic!("PostgreSQL container not started");
@@ -34,7 +37,10 @@ impl TestContainers {
 
     pub async fn redis_url(&self) -> String {
         if let Some(container) = &self.redis {
-            let port = container.get_host_port_ipv4(6379).await.expect("Failed to get port");
+            let port = container
+                .get_host_port_ipv4(6379)
+                .await
+                .expect("Failed to get port");
             format!("redis://localhost:{}", port)
         } else {
             panic!("Redis container not started");
@@ -43,7 +49,10 @@ impl TestContainers {
 
     pub async fn meilisearch_url(&self) -> String {
         if let Some(container) = &self.meilisearch {
-            let port = container.get_host_port_ipv4(7700).await.expect("Failed to get port");
+            let port = container
+                .get_host_port_ipv4(7700)
+                .await
+                .expect("Failed to get port");
             format!("http://localhost:{}", port)
         } else {
             panic!("Meilisearch container not started");
@@ -63,7 +72,7 @@ impl Default for MeilisearchImage {
         let mut env_vars = HashMap::new();
         env_vars.insert("MEILI_MASTER_KEY".to_string(), "masterKey".to_string());
         env_vars.insert("MEILI_ENV".to_string(), "development".to_string());
-        
+
         MeilisearchImage {
             tag: "v1.13".to_string(),
             env_vars,
@@ -88,7 +97,9 @@ impl Image for MeilisearchImage {
         ]
     }
 
-    fn env_vars(&self) -> impl IntoIterator<Item = (impl Into<Cow<'_, str>>, impl Into<Cow<'_, str>>)> {
+    fn env_vars(
+        &self,
+    ) -> impl IntoIterator<Item = (impl Into<Cow<'_, str>>, impl Into<Cow<'_, str>>)> {
         &self.env_vars
     }
 
@@ -99,7 +110,10 @@ impl Image for MeilisearchImage {
 
 // Container lifecycle helpers
 pub async fn start_postgres() -> Container<Postgres> {
-    Postgres::default().start().await.expect("Failed to start Postgres")
+    Postgres::default()
+        .start()
+        .await
+        .expect("Failed to start Postgres")
 }
 
 // Custom PostgreSQL image with CDC support (wal_level=logical)
@@ -115,9 +129,7 @@ impl Default for PostgresCDCImage {
         env_vars.insert("POSTGRES_PASSWORD".to_string(), "postgres".to_string());
         env_vars.insert("POSTGRES_DB".to_string(), "testdb".to_string());
 
-        PostgresCDCImage {
-            env_vars,
-        }
+        PostgresCDCImage { env_vars }
     }
 }
 
@@ -137,7 +149,9 @@ impl Image for PostgresCDCImage {
         ]
     }
 
-    fn env_vars(&self) -> impl IntoIterator<Item = (impl Into<Cow<'_, str>>, impl Into<Cow<'_, str>>)> {
+    fn env_vars(
+        &self,
+    ) -> impl IntoIterator<Item = (impl Into<Cow<'_, str>>, impl Into<Cow<'_, str>>)> {
         &self.env_vars
     }
 
@@ -148,11 +162,17 @@ impl Image for PostgresCDCImage {
 
 // Start PostgreSQL with logical replication enabled
 pub async fn start_postgres_with_cdc() -> Container<PostgresCDCImage> {
-    PostgresCDCImage::default().start().await.expect("Failed to start Postgres CDC")
+    PostgresCDCImage::default()
+        .start()
+        .await
+        .expect("Failed to start Postgres CDC")
 }
 
 pub async fn start_redis() -> Container<Redis> {
-    Redis::default().start().await.expect("Failed to start Redis")
+    Redis::default()
+        .start()
+        .await
+        .expect("Failed to start Redis")
 }
 
 pub async fn start_meilisearch() -> Container<MeilisearchImage> {

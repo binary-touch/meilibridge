@@ -2,7 +2,7 @@
 
 use chrono::Utc;
 use meilibridge::models::progress::{Checkpoint, Position, ProgressStats};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 use uuid::Uuid;
 

@@ -11,7 +11,9 @@ impl ConfigLoader {
         let mut builder = ConfigBuilder::builder();
 
         // Load from config file if specified
-        let config_path = path.map(String::from).or_else(|| env::var("CONFIG_PATH").ok());
+        let config_path = path
+            .map(String::from)
+            .or_else(|| env::var("CONFIG_PATH").ok());
 
         if let Some(config_path) = config_path {
             builder = builder.add_source(File::with_name(&config_path));

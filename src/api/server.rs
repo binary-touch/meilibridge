@@ -1,10 +1,9 @@
-use crate::api::{cache_handlers, diagnostics, handlers, middleware, ApiState};
+use crate::api::{ApiState, cache_handlers, diagnostics, handlers, middleware};
 use crate::config::Config;
 use crate::error::{MeiliBridgeError, Result};
 use axum::{
-    middleware as axum_middleware,
+    Router, middleware as axum_middleware,
     routing::{delete, get, post, put},
-    Router,
 };
 use std::net::SocketAddr;
 use tower_http::cors::CorsLayer;

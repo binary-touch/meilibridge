@@ -1,8 +1,8 @@
 // Common API testing helpers
 
-use axum::routing::{delete, get, post, put};
 use axum::Router;
-use meilibridge::api::{handlers, ApiState};
+use axum::routing::{delete, get, post, put};
+use meilibridge::api::{ApiState, handlers};
 use meilibridge::config::Config;
 use meilibridge::health::HealthRegistry;
 use meilibridge::pipeline::PipelineOrchestrator;

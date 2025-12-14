@@ -2,10 +2,10 @@ use crate::api::ApiState;
 use crate::config::SyncTaskConfig;
 use crate::error::MeiliBridgeError;
 use axum::{
+    Json,
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
-    Json,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

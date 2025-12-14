@@ -2,7 +2,7 @@
 
 use meilibridge::pipeline::memory_monitor::{MemoryMonitor, MemoryPressureEvent};
 use std::sync::Arc;
-use tokio::time::{timeout, Duration};
+use tokio::time::{Duration, timeout};
 
 #[cfg(test)]
 mod memory_monitor_tests {

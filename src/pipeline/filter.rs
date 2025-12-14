@@ -1,6 +1,6 @@
 use crate::config::FilterConfig;
 use crate::error::Result;
-use crate::models::{stream_event::Event, EventType};
+use crate::models::{EventType, stream_event::Event};
 use serde_json::Value;
 use std::collections::HashMap;
 use tracing::debug;

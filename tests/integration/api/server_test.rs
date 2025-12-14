@@ -1,8 +1,8 @@
 // API server integration tests
 
+use crate::common::TestApiServer;
 use crate::common::api_helpers::assertions::*;
 use crate::common::fixtures::*;
-use crate::common::TestApiServer;
 use reqwest::{Client, StatusCode};
 use serde_json::json;
 use std::sync::Arc;

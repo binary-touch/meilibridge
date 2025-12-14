@@ -5,9 +5,9 @@ use crate::source::adapter::SourceAdapter;
 use futures::StreamExt;
 use std::collections::HashMap;
 use std::sync::Arc;
+use tokio::sync::RwLock;
 use tokio::sync::mpsc;
 use tokio::sync::watch;
-use tokio::sync::RwLock;
 use tracing::{debug, error, info, warn};
 
 /// Coordinates CDC event consumption and distribution to sync tasks

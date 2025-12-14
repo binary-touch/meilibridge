@@ -5,8 +5,8 @@ use crate::pipeline::{
     transformer::EventTransformer,
 };
 use std::sync::Arc;
-use tokio::sync::{mpsc, RwLock, Semaphore};
-use tokio::time::{interval, Duration};
+use tokio::sync::{RwLock, Semaphore, mpsc};
+use tokio::time::{Duration, interval};
 use tracing::{debug, info, warn};
 
 /// Configuration for parallel processing

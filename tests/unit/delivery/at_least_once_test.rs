@@ -4,7 +4,7 @@ use meilibridge::delivery::{AtLeastOnceConfig, AtLeastOnceManager, Deduplication
 use meilibridge::models::Position;
 use std::collections::HashSet;
 use std::sync::Arc;
-use tokio::time::{sleep, Duration};
+use tokio::time::{Duration, sleep};
 
 #[cfg(test)]
 mod at_least_once_tests {

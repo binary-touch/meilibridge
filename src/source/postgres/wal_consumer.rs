@@ -1,5 +1,5 @@
 use crate::error::Result;
-use crate::models::{stream_event::Event, CdcEvent, EventType};
+use crate::models::{CdcEvent, EventType, stream_event::Event};
 use crate::source::postgres::pgoutput::{PgOutputMessage, PgOutputParser};
 use chrono::Utc;
 use futures::Stream;

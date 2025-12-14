@@ -37,7 +37,10 @@ impl TestEnvironment {
     /// Setup only PostgreSQL
     pub async fn with_postgres(mut self) -> Result<Self, Box<dyn std::error::Error>> {
         let container = start_postgres_with_cdc().await;
-        let port = container.get_host_port_ipv4(5432).await.expect("Failed to get port");
+        let port = container
+            .get_host_port_ipv4(5432)
+            .await
+            .expect("Failed to get port");
         let url = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
 
         wait_for_postgres(&url).await?;
@@ -59,7 +62,10 @@ impl TestEnvironment {
     /// Setup only Redis
     pub async fn with_redis(mut self) -> Result<Self, Box<dyn std::error::Error>> {
         let container = start_redis().await;
-        let port = container.get_host_port_ipv4(6379).await.expect("Failed to get port");
+        let port = container
+            .get_host_port_ipv4(6379)
+            .await
+            .expect("Failed to get port");
         let url = format!("redis://localhost:{}", port);
 
         wait_for_redis(&url).await?;
@@ -76,7 +82,10 @@ impl TestEnvironment {
     /// Setup only Meilisearch
     pub async fn with_meilisearch(mut self) -> Result<Self, Box<dyn std::error::Error>> {
         let container = start_meilisearch().await;
-        let port = container.get_host_port_ipv4(7700).await.expect("Failed to get port");
+        let port = container
+            .get_host_port_ipv4(7700)
+            .await
+            .expect("Failed to get port");
         let url = format!("http://localhost:{}", port);
 
         wait_for_meilisearch(&url).await?;
@@ -142,10 +151,8 @@ impl TestEnvironment {
 
 /// Quick setup functions for common scenarios
 /// Setup PostgreSQL with CDC for integration tests
-pub async fn setup_postgres_cdc() -> Result<
-    (Container<PostgresCDCImage>, PostgresClient, String),
-    Box<dyn std::error::Error>,
-> {
+pub async fn setup_postgres_cdc()
+-> Result<(Container<PostgresCDCImage>, PostgresClient, String), Box<dyn std::error::Error>> {
     let env = TestEnvironment::new().with_postgres().await?;
     Ok((
         env.postgres_container.unwrap(),
@@ -155,8 +162,8 @@ pub async fn setup_postgres_cdc() -> Result<
 }
 
 /// Setup Redis for integration tests
-pub async fn setup_redis(
-) -> Result<(Container<Redis>, RedisClient, String), Box<dyn std::error::Error>> {
+pub async fn setup_redis()
+-> Result<(Container<Redis>, RedisClient, String), Box<dyn std::error::Error>> {
     let env = TestEnvironment::new().with_redis().await?;
     Ok((
         env.redis_container.unwrap(),
@@ -166,14 +173,8 @@ pub async fn setup_redis(
 }
 
 /// Setup Meilisearch for integration tests
-pub async fn setup_meilisearch() -> Result<
-    (
-        Container<MeilisearchImage>,
-        MeilisearchClient,
-        String,
-    ),
-    Box<dyn std::error::Error>,
-> {
+pub async fn setup_meilisearch()
+-> Result<(Container<MeilisearchImage>, MeilisearchClient, String), Box<dyn std::error::Error>> {
     let env = TestEnvironment::new().with_meilisearch().await?;
     Ok((
         env.meilisearch_container.unwrap(),

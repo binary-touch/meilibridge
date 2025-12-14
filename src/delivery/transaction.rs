@@ -5,7 +5,7 @@ use crate::models::Position;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tokio::time::{timeout, Duration};
+use tokio::time::{Duration, timeout};
 use tracing::{debug, error, info, warn};
 
 /// Transaction state in two-phase commit

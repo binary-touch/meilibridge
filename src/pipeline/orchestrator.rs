@@ -8,14 +8,14 @@ use crate::metrics;
 use crate::models::event::{
     Event as ModelsEvent, EventData as ModelsEventData, EventType as ModelsEventType,
 };
-use crate::models::{stream_event::Event, Position};
 use crate::models::{EventId, EventMetadata, EventSource};
-use crate::pipeline::{
-    filter::EventFilter, mapper::FieldMapper, soft_delete::SoftDeleteHandler,
-    transformer::EventTransformer, BackpressureConfig, BackpressureEvent, BackpressureManager,
-    CdcCoordinator, ParallelTableProcessor, WorkStealingCoordinator,
-};
+use crate::models::{Position, stream_event::Event};
 use crate::pipeline::{AdaptiveBatchingManager, MemoryMonitor};
+use crate::pipeline::{
+    BackpressureConfig, BackpressureEvent, BackpressureManager, CdcCoordinator,
+    ParallelTableProcessor, WorkStealingCoordinator, filter::EventFilter, mapper::FieldMapper,
+    soft_delete::SoftDeleteHandler, transformer::EventTransformer,
+};
 use crate::source::adapter::SourceAdapter;
 use crate::source::postgres::PostgresAdapter;
 use chrono::Utc;
@@ -23,8 +23,8 @@ use futures::StreamExt;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::{mpsc, watch, RwLock};
-use tokio::time::{interval, Duration};
+use tokio::sync::{RwLock, mpsc, watch};
+use tokio::time::{Duration, interval};
 use tracing::{debug, error, info, trace, warn};
 
 /// Parameters for batch processing with at-least-once delivery
@@ -1828,7 +1828,7 @@ impl PipelineOrchestrator {
             None => {
                 return Err(MeiliBridgeError::Pipeline(
                     "No response from destination".to_string(),
-                ))
+                ));
             }
         }
 

@@ -1,7 +1,7 @@
 //! Soft delete handling for the pipeline
 
 use crate::config::SoftDeleteConfig;
-use crate::models::{stream_event::Event, EventType};
+use crate::models::{EventType, stream_event::Event};
 use serde_json::Value;
 use tracing::{debug, trace};
 

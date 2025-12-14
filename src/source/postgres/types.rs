@@ -1,5 +1,5 @@
 use crate::error::{MeiliBridgeError, Result};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::str;
 
 /// PostgreSQL type OIDs

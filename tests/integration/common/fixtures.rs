@@ -179,8 +179,8 @@ pub async fn create_test_api_state() -> ApiState {
 }
 
 pub async fn start_test_server(state: ApiState) -> (SocketAddr, tokio::task::JoinHandle<()>) {
-    use axum::routing::{delete, get, post, put};
     use axum::Router;
+    use axum::routing::{delete, get, post, put};
     use meilibridge::api::handlers;
 
     let app = Router::new()

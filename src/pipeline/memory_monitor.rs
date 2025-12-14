@@ -1,8 +1,8 @@
 use crate::error::Result;
-use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use tokio::sync::mpsc;
-use tokio::time::{interval, Duration};
+use tokio::time::{Duration, interval};
 use tracing::{info, warn};
 
 /// Tracks memory usage and enforces limits

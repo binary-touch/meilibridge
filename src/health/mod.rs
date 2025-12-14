@@ -217,7 +217,7 @@ impl HealthCheck for MeilisearchHealthCheck {
         ) {
             Ok(client) => client,
             Err(e) => {
-                return HealthCheckResult::unhealthy(format!("Failed to create client: {}", e))
+                return HealthCheckResult::unhealthy(format!("Failed to create client: {}", e));
             }
         };
 

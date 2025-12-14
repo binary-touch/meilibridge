@@ -12,9 +12,8 @@ use testcontainers_modules::redis::Redis;
 mod redis_checkpoint_tests {
     use super::*;
 
-    async fn setup_redis(
-    ) -> Result<(Container<Redis>, redis::Client, String), Box<dyn std::error::Error>>
-    {
+    async fn setup_redis()
+    -> Result<(Container<Redis>, redis::Client, String), Box<dyn std::error::Error>> {
         crate::common::setup_redis().await
     }
 

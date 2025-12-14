@@ -1,5 +1,5 @@
 use crate::error::{MeiliBridgeError, Result};
-use crate::models::{stream_event::Event, CdcEvent, EventType};
+use crate::models::{CdcEvent, EventType, stream_event::Event};
 use serde_json::Value;
 use tracing::{debug, warn};
 

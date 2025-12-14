@@ -168,7 +168,9 @@ impl CircuitBreakerBuilder {
 
     pub fn error_rate(self, _rate: f64) -> Self {
         // Note: circuit_breaker 0.1.1 doesn't support error rate, only consecutive failures
-        warn!("Error rate configuration not supported in circuit_breaker 0.1.1, using consecutive failures instead");
+        warn!(
+            "Error rate configuration not supported in circuit_breaker 0.1.1, using consecutive failures instead"
+        );
         self
     }
 

@@ -76,7 +76,11 @@ impl FullSyncHandler {
         let stats = cached_conn.cache_stats().await;
         info!(
             "Full sync completed for {}. Synced {} rows. Cache stats: {} hits, {} misses, {:.2}% hit rate",
-            table, synced_count, stats.hits, stats.misses, stats.hit_rate * 100.0
+            table,
+            synced_count,
+            stats.hits,
+            stats.misses,
+            stats.hit_rate * 100.0
         );
 
         // Export metrics

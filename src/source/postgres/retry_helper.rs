@@ -1,5 +1,5 @@
-use crate::error::retry::{with_retry, RetryConfig, Retryable};
 use crate::error::MeiliBridgeError;
+use crate::error::retry::{RetryConfig, Retryable, with_retry};
 use deadpool_postgres::Pool;
 use tokio_postgres::Client;
 use tracing::debug;

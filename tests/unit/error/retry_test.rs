@@ -1,9 +1,9 @@
 // Retry logic tests
 
-use meilibridge::error::retry::*;
 use meilibridge::error::MeiliBridgeError;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use meilibridge::error::retry::*;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
 #[cfg(test)]
@@ -313,11 +313,13 @@ mod retry_tests {
     #[test]
     fn test_meilibridge_error_retryable() {
         // Retryable MeiliBridge errors
-        assert!(MeiliBridgeError::Io(std::io::Error::new(
-            std::io::ErrorKind::ConnectionRefused,
-            "Connection refused"
-        ))
-        .is_retryable());
+        assert!(
+            MeiliBridgeError::Io(std::io::Error::new(
+                std::io::ErrorKind::ConnectionRefused,
+                "Connection refused"
+            ))
+            .is_retryable()
+        );
 
         assert!(MeiliBridgeError::Database("connection error".to_string()).is_retryable());
 

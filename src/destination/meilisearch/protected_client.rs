@@ -2,7 +2,7 @@ use crate::config::MeilisearchConfig;
 use crate::destination::circuit_breaker::{
     CircuitBreakerBuilder, CircuitBreakerError, MeilisearchCircuitBreaker,
 };
-use crate::destination::meilisearch::client::{convert_error, MeilisearchClient};
+use crate::destination::meilisearch::client::{MeilisearchClient, convert_error};
 use crate::error::{MeiliBridgeError, Result};
 use meilisearch_sdk::indexes::Index;
 use serde_json::Value;

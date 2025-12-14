@@ -249,8 +249,8 @@ fn sanitize_value(raw: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::stream_event::Event;
     use crate::models::EventType;
+    use crate::models::stream_event::Event;
 
     #[test]
     fn parses_update_with_whitespace_values() {
