@@ -102,7 +102,7 @@ impl ConfigLoader {
 
         // Validate sync tasks
         // We allow starting with no sync tasks (can be added via API)
-        
+
         for (i, task) in config.sync_tasks.iter().enumerate() {
             if task.table.is_empty() {
                 errors.push(format!("Sync task {} has empty table name", i));
