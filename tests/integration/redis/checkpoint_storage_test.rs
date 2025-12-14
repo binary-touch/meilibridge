@@ -187,7 +187,7 @@ mod redis_checkpoint_tests {
     #[tokio::test]
     async fn test_connection_failure_handling() {
         // Use Redis::default() and start() instead of DOCKER
-        let container = Redis::default().start().await.unwrap();
+        let container = Redis.start().await.unwrap();
         let port = container.get_host_port_ipv4(6379).await.unwrap();
         let url = format!("redis://localhost:{}", port);
 

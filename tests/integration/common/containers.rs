@@ -170,10 +170,7 @@ pub async fn start_postgres_with_cdc() -> Container<PostgresCDCImage> {
 }
 
 pub async fn start_redis() -> Container<Redis> {
-    Redis::default()
-        .start()
-        .await
-        .expect("Failed to start Redis")
+    Redis.start().await.expect("Failed to start Redis")
 }
 
 pub async fn start_meilisearch() -> Container<MeilisearchImage> {
