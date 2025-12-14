@@ -78,7 +78,7 @@ where
                 let mut actual_delay = delay_ms;
                 if config.jitter {
                     use rand::Rng;
-                    let jitter = rand::thread_rng().gen_range(0..=delay_ms / 4);
+                    let jitter = rand::rng().random_range(0..=delay_ms / 4);
                     actual_delay = delay_ms.saturating_add(jitter);
                 }
 

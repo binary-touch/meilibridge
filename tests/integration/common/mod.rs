@@ -9,4 +9,4 @@ pub mod test_data;
 
 pub use api_helpers::TestApiServer;
 // Re-export commonly used items
-pub use setup::{setup_meilisearch, setup_postgres_cdc, setup_redis, DOCKER};
+pub use setup::{setup_meilisearch, setup_postgres_cdc, setup_redis};

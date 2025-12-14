@@ -27,15 +27,15 @@ impl ApiServer {
         Router::new()
             // Health check
             .route("/health", get(handlers::health))
-            .route("/health/:component", get(handlers::get_component_health))
+            .route("/health/{component}", get(handlers::get_component_health))
             // Task management
             .route("/tasks", get(handlers::get_tasks))
             .route("/tasks", post(handlers::create_task))
-            .route("/tasks/:id", get(handlers::get_task))
-            .route("/tasks/:id", delete(handlers::delete_task))
-            .route("/tasks/:id/pause", put(handlers::pause_task))
-            .route("/tasks/:id/resume", put(handlers::resume_task))
-            .route("/tasks/:id/full-sync", post(handlers::full_sync_task))
+            .route("/tasks/{id}", get(handlers::get_task))
+            .route("/tasks/{id}", delete(handlers::delete_task))
+            .route("/tasks/{id}/pause", put(handlers::pause_task))
+            .route("/tasks/{id}/resume", put(handlers::resume_task))
+            .route("/tasks/{id}/full-sync", post(handlers::full_sync_task))
             // CDC control
             .route("/cdc/pause", put(handlers::pause_cdc))
             .route("/cdc/resume", put(handlers::resume_cdc))
@@ -46,7 +46,7 @@ impl ApiServer {
             // Dead letter queue
             .route("/dead-letters", get(handlers::get_dead_letter_stats))
             .route(
-                "/dead-letters/:task_id/reprocess",
+                "/dead-letters/{task_id}/reprocess",
                 post(handlers::reprocess_dead_letters),
             )
             // Metrics endpoint
@@ -56,7 +56,7 @@ impl ApiServer {
             .route("/cache/clear", post(cache_handlers::clear_cache))
             // Diagnostic endpoints
             .route(
-                "/diagnostics/pipeline/:table",
+                "/diagnostics/pipeline/{table}",
                 get(diagnostics::get_pipeline_diagnostics),
             )
             .route(
@@ -68,11 +68,11 @@ impl ApiServer {
                 get(diagnostics::get_connections_diagnostics),
             )
             .route(
-                "/diagnostics/trace/:event_id",
+                "/diagnostics/trace/{event_id}",
                 get(diagnostics::get_event_trace),
             )
             .route(
-                "/diagnostics/replay/:table",
+                "/diagnostics/replay/{table}",
                 post(diagnostics::replay_events),
             )
             .route(

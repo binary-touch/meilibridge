@@ -2,6 +2,7 @@
 
 // Note: redis_storage module is private, so we can't directly test it
 // These tests demonstrate DLQ patterns using Redis directly
+use crate::common::containers::Container;
 use chrono::Utc;
 use meilibridge::error::MeiliBridgeError;
 use meilibridge::models::event::{
@@ -10,7 +11,6 @@ use meilibridge::models::event::{
 use redis::Commands;
 use serde_json::json;
 use std::collections::HashMap;
-use testcontainers::Container;
 use testcontainers_modules::redis::Redis;
 
 #[cfg(test)]
@@ -18,7 +18,7 @@ mod redis_dlq_tests {
     use super::*;
 
     async fn setup_redis(
-    ) -> Result<(Container<'static, Redis>, redis::Client, String), Box<dyn std::error::Error>>
+    ) -> Result<(Container<Redis>, redis::Client, String), Box<dyn std::error::Error>>
     {
         crate::common::setup_redis().await
     }

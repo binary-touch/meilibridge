@@ -252,7 +252,7 @@ impl HealthCheck for RedisHealthCheck {
         // Try to connect to Redis
         match redis::Client::open(self.url.as_str()) {
             Ok(client) => {
-                match client.get_tokio_connection().await {
+                match client.get_multiplexed_async_connection().await {
                     Ok(mut conn) => {
                         // Execute a PING command
                         let ping_result: Result<String, redis::RedisError> =

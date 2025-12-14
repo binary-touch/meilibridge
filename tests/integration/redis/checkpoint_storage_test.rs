@@ -1,10 +1,11 @@
 // Redis checkpoint storage integration tests
 
+use crate::common::containers::Container;
 use crate::common::test_data::create_checkpoint;
 use meilibridge::models::progress::{Checkpoint, Position};
 use redis::Commands;
 use serde_json::json;
-use testcontainers::Container;
+use testcontainers::runners::AsyncRunner;
 use testcontainers_modules::redis::Redis;
 
 #[cfg(test)]
@@ -12,7 +13,7 @@ mod redis_checkpoint_tests {
     use super::*;
 
     async fn setup_redis(
-    ) -> Result<(Container<'static, Redis>, redis::Client, String), Box<dyn std::error::Error>>
+    ) -> Result<(Container<Redis>, redis::Client, String), Box<dyn std::error::Error>>
     {
         crate::common::setup_redis().await
     }
@@ -186,11 +187,9 @@ mod redis_checkpoint_tests {
 
     #[tokio::test]
     async fn test_connection_failure_handling() {
-        // Use static Docker client
-        use crate::common::DOCKER;
-
-        let container = DOCKER.run(Redis);
-        let port = container.get_host_port_ipv4(6379);
+        // Use Redis::default() and start() instead of DOCKER
+        let container = Redis::default().start().await.unwrap();
+        let port = container.get_host_port_ipv4(6379).await.unwrap();
         let url = format!("redis://localhost:{}", port);
 
         crate::common::containers::wait_for_redis(&url)
@@ -207,6 +206,7 @@ mod redis_checkpoint_tests {
         let _: Result<(), redis::RedisError> = conn.set(&key, serialized);
 
         // Stop container to simulate connection failure
+        // With ContainerAsync, dropping it stops the container
         drop(container);
 
         // Try to use connection (should fail)

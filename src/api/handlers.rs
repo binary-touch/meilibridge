@@ -235,7 +235,7 @@ pub async fn reprocess_dead_letters(
 
     // Update metrics
     crate::metrics::DEAD_LETTER_REPROCESS_TOTAL
-        .with_label_values(&[&task_id, "initiated"])
+        .with_label_values(&[task_id.as_str(), "initiated"])
         .inc_by(count as f64);
 
     Ok(StatusCode::ACCEPTED)

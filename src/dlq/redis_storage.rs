@@ -61,7 +61,7 @@ impl DlqStorage for RedisDlqStorage {
             .zadd(&task_key, &entry.id, entry.created_at.timestamp())
             // Add to all entries index
             .zadd(&all_key, &entry.id, entry.created_at.timestamp())
-            .query_async::<_, ()>(&mut conn)
+            .query_async::<()>(&mut conn)
             .await
             .map_err(|e| {
                 MeiliBridgeError::Redis(format!("Failed to store dead letter entry: {}", e))
@@ -136,7 +136,7 @@ impl DlqStorage for RedisDlqStorage {
                 .del(&entry_key)
                 .zrem(&task_key, id)
                 .zrem(&all_key, id)
-                .query_async::<_, ()>(&mut conn)
+                .query_async::<()>(&mut conn)
                 .await
                 .map_err(|e| MeiliBridgeError::Redis(format!("Failed to remove entry: {}", e)))?;
 
@@ -227,7 +227,7 @@ impl DlqStorage for RedisDlqStorage {
             // Clear the task index
             pipe.del(&task_key);
 
-            pipe.query_async::<_, ()>(&mut conn).await.map_err(|e| {
+            pipe.query_async::<()>(&mut conn).await.map_err(|e| {
                 MeiliBridgeError::Redis(format!("Failed to clear task entries: {}", e))
             })?;
 

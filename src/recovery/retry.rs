@@ -90,8 +90,8 @@ impl ExponentialBackoff {
         // Apply jitter if enabled
         if self.policy.jitter {
             use rand::Rng;
-            let mut rng = rand::thread_rng();
-            let jitter_factor = rng.gen_range(0.5..1.5);
+            let mut rng = rand::rng();
+            let jitter_factor = rng.random_range(0.5..1.5);
             delay = delay.mul_f64(jitter_factor);
         }
 

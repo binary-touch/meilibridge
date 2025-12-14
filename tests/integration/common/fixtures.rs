@@ -186,14 +186,14 @@ pub async fn start_test_server(state: ApiState) -> (SocketAddr, tokio::task::Joi
     let app = Router::new()
         // Health check
         .route("/health", get(handlers::health))
-        .route("/health/:component", get(handlers::get_component_health))
+        .route("/health/{component}", get(handlers::get_component_health))
         // Task management
         .route("/tasks", get(handlers::get_tasks))
         .route("/tasks", post(handlers::create_task))
-        .route("/tasks/:id", get(handlers::get_task))
-        .route("/tasks/:id", delete(handlers::delete_task))
-        .route("/tasks/:id/pause", put(handlers::pause_task))
-        .route("/tasks/:id/resume", put(handlers::resume_task))
+        .route("/tasks/{id}", get(handlers::get_task))
+        .route("/tasks/{id}", delete(handlers::delete_task))
+        .route("/tasks/{id}/pause", put(handlers::pause_task))
+        .route("/tasks/{id}/resume", put(handlers::resume_task))
         // CDC control
         .route("/cdc/status", get(handlers::get_cdc_status))
         // Metrics

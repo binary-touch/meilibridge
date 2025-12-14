@@ -53,7 +53,7 @@ impl MeilisearchCircuitBreaker {
 
                 // Update metrics
                 crate::metrics::CIRCUIT_BREAKER_CALLS
-                    .with_label_values(&[&self.name, "rejected"])
+                    .with_label_values(&[self.name.as_str(), "rejected"])
                     .inc();
 
                 Err(CircuitBreakerError::CircuitOpen)
@@ -76,7 +76,7 @@ impl MeilisearchCircuitBreaker {
 
                         // Update metrics
                         crate::metrics::CIRCUIT_BREAKER_CALLS
-                            .with_label_values(&[&self.name, "success"])
+                            .with_label_values(&[self.name.as_str(), "success"])
                             .inc();
                     }
                     Err(e) => {
@@ -85,7 +85,7 @@ impl MeilisearchCircuitBreaker {
 
                         // Update metrics
                         crate::metrics::CIRCUIT_BREAKER_CALLS
-                            .with_label_values(&[&self.name, "failure"])
+                            .with_label_values(&[self.name.as_str(), "failure"])
                             .inc();
                     }
                 }
