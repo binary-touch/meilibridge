@@ -101,4 +101,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
 
 # Use the entrypoint script
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["--config", "/etc/meilibridge/config.yaml"]
+CMD []
