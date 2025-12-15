@@ -34,7 +34,7 @@ mod dlq_tests {
             },
             metadata: EventMetadata {
                 transaction_id: Some("100".to_string()),
-                position: format!("0/{}", id),
+                position: format!("0/{id}"),
                 custom: HashMap::new(),
             },
             timestamp: Utc::now(),
@@ -75,9 +75,9 @@ mod dlq_tests {
         // Add events for different tasks
         for task_num in 1..=3 {
             for event_num in 1..=5 {
-                let event = create_test_event("users", &format!("{}-{}", task_num, event_num));
-                let error = create_test_error(&format!("Error for task{}", task_num));
-                dlq.add_failed_event(format!("task{}", task_num), event, error, 0)
+                let event = create_test_event("users", &format!("{task_num}-{event_num}"));
+                let error = create_test_error(&format!("Error for task{task_num}"));
+                dlq.add_failed_event(format!("task{task_num}"), event, error, 0)
                     .await
                     .unwrap();
             }
@@ -86,14 +86,14 @@ mod dlq_tests {
         // Verify each task has correct number of entries
         for task_num in 1..=3 {
             let entries = storage
-                .get_by_task(&format!("task{}", task_num), None)
+                .get_by_task(&format!("task{task_num}"), None)
                 .await
                 .unwrap();
             assert_eq!(entries.len(), 5);
 
             // All should belong to the same task
             for entry in entries {
-                assert_eq!(entry.task_id, format!("task{}", task_num));
+                assert_eq!(entry.task_id, format!("task{task_num}"));
             }
         }
     }
@@ -198,8 +198,8 @@ mod dlq_tests {
 
         // Add events for multiple tasks
         for i in 0..5 {
-            let event1 = create_test_event("users", &format!("task1-{}", i));
-            let event2 = create_test_event("users", &format!("task2-{}", i));
+            let event1 = create_test_event("users", &format!("task1-{i}"));
+            let event2 = create_test_event("users", &format!("task2-{i}"));
             dlq.add_failed_event("task1".to_string(), event1, create_test_error("Error"), 0)
                 .await
                 .unwrap();
@@ -306,10 +306,10 @@ mod dlq_tests {
             for event_num in 0..10 {
                 let dlq_clone = dlq.clone();
                 let handle = tokio::spawn(async move {
-                    let event = create_test_event("users", &format!("{}-{}", task_num, event_num));
+                    let event = create_test_event("users", &format!("{task_num}-{event_num}"));
                     let error = create_test_error("Concurrent error");
                     dlq_clone
-                        .add_failed_event(format!("task{}", task_num), event, error, 0)
+                        .add_failed_event(format!("task{task_num}"), event, error, 0)
                         .await
                         .unwrap();
                 });
@@ -329,7 +329,7 @@ mod dlq_tests {
         // Verify each task has correct count
         for task_num in 0..5 {
             let entries = storage
-                .get_by_task(&format!("task{}", task_num), None)
+                .get_by_task(&format!("task{task_num}"), None)
                 .await
                 .unwrap();
             assert_eq!(entries.len(), 10);

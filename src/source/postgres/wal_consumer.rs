@@ -57,8 +57,7 @@ impl WalConsumer {
             loop {
                 // Poll for changes using pg_logical_slot_peek_changes
                 let query = format!(
-                    "SELECT lsn, xid, data FROM pg_logical_slot_peek_changes('{}', NULL, NULL, 'proto_version', '1', 'publication_names', '{}')",
-                    slot_name, publication_name
+                    "SELECT lsn, xid, data FROM pg_logical_slot_peek_changes('{slot_name}', NULL, NULL, 'proto_version', '1', 'publication_names', '{publication_name}')",
                 );
 
                 match client.query(&query, &[]).await {
@@ -84,8 +83,7 @@ impl WalConsumer {
 
                             // Advance the replication slot
                             let advance_query = format!(
-                                "SELECT pg_replication_slot_advance('{}', '{}')",
-                                slot_name, last_lsn
+                                "SELECT pg_replication_slot_advance('{slot_name}', '{last_lsn}')",
                             );
 
                             if let Err(e) = client.execute(&advance_query, &[]).await {

@@ -87,7 +87,7 @@ impl ReplicationConsumer {
         self.client
             .execute(&query, &[])
             .await
-            .map_err(|e| MeiliBridgeError::Source(format!("Failed to create slot: {}", e)))?;
+            .map_err(|e| MeiliBridgeError::Source(format!("Failed to create slot: {e}")))?;
 
         info!(
             "Created replication slot '{}' with test_decoding plugin",
@@ -121,8 +121,7 @@ impl ReplicationConsumer {
 
                 // Use pg_logical_slot_get_changes for test_decoding
                 let query = format!(
-                    "SELECT lsn::text, xid::text, data FROM pg_logical_slot_get_changes('{}', NULL, NULL)",
-                    slot_name
+                    "SELECT lsn::text, xid::text, data FROM pg_logical_slot_get_changes('{slot_name}', NULL, NULL)",
                 );
 
                 match client.query(&query, &[]).await {
@@ -186,8 +185,7 @@ impl ReplicationConsumer {
                             );
                             let _ = tx
                                 .send(Err(MeiliBridgeError::Source(format!(
-                                    "Database connection lost after {} consecutive errors",
-                                    consecutive_errors
+                                    "Database connection lost after {consecutive_errors} consecutive errors",
                                 ))))
                                 .await;
                             return;

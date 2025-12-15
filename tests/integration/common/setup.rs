@@ -41,14 +41,14 @@ impl TestEnvironment {
             .get_host_port_ipv4(5432)
             .await
             .expect("Failed to get port");
-        let url = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let url = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&url).await?;
 
         let (client, connection) = tokio_postgres::connect(&url, tokio_postgres::NoTls).await?;
         tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("PostgreSQL connection error: {}", e);
+                eprintln!("PostgreSQL connection error: {e}");
             }
         });
 
@@ -66,7 +66,7 @@ impl TestEnvironment {
             .get_host_port_ipv4(6379)
             .await
             .expect("Failed to get port");
-        let url = format!("redis://localhost:{}", port);
+        let url = format!("redis://localhost:{port}");
 
         wait_for_redis(&url).await?;
 
@@ -86,7 +86,7 @@ impl TestEnvironment {
             .get_host_port_ipv4(7700)
             .await
             .expect("Failed to get port");
-        let url = format!("http://localhost:{}", port);
+        let url = format!("http://localhost:{port}");
 
         wait_for_meilisearch(&url).await?;
 

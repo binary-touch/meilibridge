@@ -116,7 +116,7 @@ fn init_tracing(log_level: &str) {
         .fmt_fields(tracing_subscriber::fmt::format::DefaultFields::new())
         .event_format(CustomFormatter);
 
-    let filter = format!("meilibridge={},info", log_level);
+    let filter = format!("meilibridge={log_level},info");
     let filter_layer = tracing_subscriber::EnvFilter::try_from_default_env()
         .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new(filter));
 
@@ -167,7 +167,7 @@ where
             } else {
                 name
             };
-            write!(writer, "[{:8}", truncated_name)?;
+            write!(writer, "[{truncated_name:8}")?;
         } else {
             write!(writer, "[{:8}", "unnamed")?;
         }
@@ -178,7 +178,7 @@ where
             .strip_prefix("ThreadId(")
             .and_then(|s| s.strip_suffix(")"))
         {
-            write!(writer, "-{}] ", id_num)?;
+            write!(writer, "-{id_num}] ")?;
         } else {
             write!(writer, "-??] ")?;
         }

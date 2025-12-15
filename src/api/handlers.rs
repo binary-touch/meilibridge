@@ -40,7 +40,7 @@ pub struct ErrorResponse {
 impl From<MeiliBridgeError> for ErrorResponse {
     fn from(err: MeiliBridgeError) -> Self {
         Self {
-            error: format!("{:?}", err),
+            error: format!("{err:?}"),
             message: err.to_string(),
         }
     }
@@ -120,8 +120,7 @@ pub async fn get_task(
         }))
     } else {
         Err(MeiliBridgeError::NotFound(format!(
-            "Task '{}' not found",
-            task_id
+            "Task '{task_id}' not found",
         )))
     }
 }
@@ -298,7 +297,7 @@ pub async fn delete_task(
 /// Get Prometheus metrics
 pub async fn get_metrics() -> Result<String, MeiliBridgeError> {
     crate::metrics::export_metrics()
-        .map_err(|e| MeiliBridgeError::Pipeline(format!("Failed to export metrics: {}", e)))
+        .map_err(|e| MeiliBridgeError::Pipeline(format!("Failed to export metrics: {e}")))
 }
 
 /// Get health check for a specific component
@@ -311,8 +310,7 @@ pub async fn get_component_health(
             Ok((StatusCode::OK, Json(health)))
         } else {
             Err(MeiliBridgeError::NotFound(format!(
-                "Component '{}' not found",
-                component
+                "Component '{component}' not found",
             )))
         }
     } else {

@@ -246,8 +246,8 @@ impl DeadLetterQueue {
         let task_id = entry.task_id.clone();
 
         warn!(
-            "Adding event to dead letter queue. Task: {}, Error: {}, Retries: {}",
-            entry.task_id, entry.error, entry.retry_count
+            "Adding event to dead letter queue. Task: {task_id}, Error: {0}, Retries: {retry_count}",
+            entry.error
         );
 
         self.storage.store(entry).await?;
@@ -266,7 +266,7 @@ impl DeadLetterQueue {
         let count = entries.len();
 
         if count == 0 {
-            info!("No dead letter entries found for task: {}", task_id);
+            info!("No dead letter entries found for task: {task_id}");
             return Ok(0);
         }
 
@@ -274,10 +274,7 @@ impl DeadLetterQueue {
             MeiliBridgeError::Configuration("Reprocess channel not configured".to_string())
         })?;
 
-        info!(
-            "Reprocessing {} dead letter entries for task: {}",
-            count, task_id
-        );
+        info!("Reprocessing {count} dead letter entries for task: {task_id}",);
 
         for mut entry in entries {
             // Update retry information
@@ -291,8 +288,7 @@ impl DeadLetterQueue {
             if let Err(e) = reprocess_tx.send(entry.clone()).await {
                 error!("Failed to send entry for reprocessing: {}", e);
                 return Err(MeiliBridgeError::Pipeline(format!(
-                    "Failed to reprocess entry: {}",
-                    e
+                    "Failed to reprocess entry: {e}",
                 )));
             }
 
@@ -312,10 +308,7 @@ impl DeadLetterQueue {
     /// Clear all entries for a task
     pub async fn clear_task(&self, task_id: &str) -> Result<usize> {
         let count = self.storage.clear_task(task_id).await?;
-        info!(
-            "Cleared {} dead letter entries for task: {}",
-            count, task_id
-        );
+        info!("Cleared {count} dead letter entries for task: {task_id}",);
         Ok(count)
     }
 }

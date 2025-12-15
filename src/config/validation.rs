@@ -299,7 +299,7 @@ impl ConfigValidator {
         // Create a connector to query schema
         let mut connector = PostgresConnector::new((**pg_config).clone());
         if let Err(e) = connector.connect().await {
-            report.add_warning(format!("Cannot validate fields against schema: {}", e));
+            report.add_warning(format!("Cannot validate fields against schema: {e}"));
             return Ok(());
         }
 

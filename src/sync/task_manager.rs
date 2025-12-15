@@ -382,8 +382,7 @@ impl SyncTaskManager {
             Ok(())
         } else {
             Err(MeiliBridgeError::Pipeline(format!(
-                "Task '{}' not found",
-                task_id
+                "Task '{task_id}' not found",
             )))
         }
     }
@@ -408,8 +407,7 @@ impl SyncTaskManager {
             Ok(())
         } else {
             Err(MeiliBridgeError::Pipeline(format!(
-                "Task '{}' not found",
-                task_id
+                "Task '{task_id}' not found",
             )))
         }
     }

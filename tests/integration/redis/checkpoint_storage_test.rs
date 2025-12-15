@@ -101,7 +101,7 @@ mod redis_checkpoint_tests {
         let (_container, client, _url) = setup_redis().await.unwrap();
 
         let task_id = "concurrent_task";
-        let key = format!("checkpoint:{}", task_id);
+        let key = format!("checkpoint:{task_id}");
 
         // Simulate concurrent updates
         let mut handles = vec![];
@@ -134,7 +134,7 @@ mod redis_checkpoint_tests {
                     match result {
                         Ok(Some(_)) => break, // Transaction succeeded
                         Ok(None) => continue, // Transaction aborted, retry
-                        Err(e) => panic!("Transaction error: {}", e),
+                        Err(e) => panic!("Transaction error: {e}"),
                     }
                 }
             });
@@ -189,7 +189,7 @@ mod redis_checkpoint_tests {
         // Use Redis::default() and start() instead of DOCKER
         let container = Redis.start().await.unwrap();
         let port = container.get_host_port_ipv4(6379).await.unwrap();
-        let url = format!("redis://localhost:{}", port);
+        let url = format!("redis://localhost:{port}");
 
         crate::common::containers::wait_for_redis(&url)
             .await
@@ -293,7 +293,7 @@ mod redis_checkpoint_tests {
         let (_container, client, _url) = setup_redis().await.unwrap();
 
         let task_id = "atomic_task";
-        let key = format!("checkpoint:{}", task_id);
+        let key = format!("checkpoint:{task_id}");
 
         // Initial checkpoint
         let mut conn = client.get_connection().unwrap();

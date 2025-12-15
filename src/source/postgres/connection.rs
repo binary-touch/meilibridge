@@ -34,14 +34,14 @@ impl PostgresConnector {
 
         // Test the connection
         let client = pool.get().await.map_err(|e| {
-            MeiliBridgeError::Source(format!("Failed to get connection from pool: {}", e))
+            MeiliBridgeError::Source(format!("Failed to get connection from pool: {e}"))
         })?;
 
         // Verify we can query the database
         client
             .simple_query("SELECT 1")
             .await
-            .map_err(|e| MeiliBridgeError::Source(format!("Connection test failed: {}", e)))?;
+            .map_err(|e| MeiliBridgeError::Source(format!("Connection test failed: {e}")))?;
 
         self.pool = Some(pool);
         info!("Successfully connected to PostgreSQL");
@@ -60,18 +60,16 @@ impl PostgresConnector {
             .max_size(self.config.pool.max_size as usize)
             .runtime(Runtime::Tokio1)
             .build()
-            .map_err(|e| MeiliBridgeError::Source(format!("Failed to create pool: {}", e)))?;
+            .map_err(|e| MeiliBridgeError::Source(format!("Failed to create pool: {e}")))?;
 
         Ok(pool)
     }
 
     fn build_pg_config(&self) -> Result<PgConfig> {
         let mut config = match &self.config.connection {
-            PostgreSQLConnection::ConnectionString(conn_str) => {
-                conn_str.parse::<PgConfig>().map_err(|e| {
-                    MeiliBridgeError::Config(format!("Invalid connection string: {}", e))
-                })?
-            }
+            PostgreSQLConnection::ConnectionString(conn_str) => conn_str
+                .parse::<PgConfig>()
+                .map_err(|e| MeiliBridgeError::Config(format!("Invalid connection string: {e}")))?,
             PostgreSQLConnection::Parameters {
                 host,
                 port,
@@ -103,7 +101,7 @@ impl PostgresConnector {
             .ok_or_else(|| MeiliBridgeError::Source("Not connected to PostgreSQL".to_string()))?;
 
         pool.get().await.map_err(|e| {
-            MeiliBridgeError::Source(format!("Failed to get connection from pool: {}", e))
+            MeiliBridgeError::Source(format!("Failed to get connection from pool: {e}"))
         })
     }
 
@@ -120,7 +118,7 @@ impl PostgresConnector {
         config.keepalives_retries(3);
 
         let (client, connection) = config.connect(NoTls).await.map_err(|e| {
-            MeiliBridgeError::Source(format!("Failed to create replication connection: {}", e))
+            MeiliBridgeError::Source(format!("Failed to create replication connection: {e}"))
         })?;
 
         // Spawn connection handler with error logging
@@ -153,7 +151,7 @@ impl PostgresConnector {
         // rather than using the pooled one directly
         let config = self.build_pg_config()?;
         let (client, connection) = config.connect(NoTls).await.map_err(|e| {
-            MeiliBridgeError::Source(format!("Failed to create cached connection: {}", e))
+            MeiliBridgeError::Source(format!("Failed to create cached connection: {e}"))
         })?;
 
         // Spawn connection handler
@@ -220,8 +218,7 @@ impl ReplicationSlotManager {
             }
             Ok(None) => Ok(None),
             Err(e) => Err(MeiliBridgeError::Source(format!(
-                "Failed to get slot LSN: {}",
-                e
+                "Failed to get slot LSN: {e}",
             ))),
         }
     }
@@ -247,7 +244,7 @@ impl ReplicationSlotManager {
                     let drop_query =
                         format!("SELECT pg_drop_replication_slot('{}')", self.slot_name);
                     client.execute(&drop_query, &[]).await.map_err(|e| {
-                        MeiliBridgeError::Source(format!("Failed to drop slot: {}", e))
+                        MeiliBridgeError::Source(format!("Failed to drop slot: {e}"))
                     })?;
                 }
             }
@@ -256,8 +253,7 @@ impl ReplicationSlotManager {
             }
             Err(e) => {
                 return Err(MeiliBridgeError::Source(format!(
-                    "Failed to check slot: {}",
-                    e
+                    "Failed to check slot: {e}",
                 )));
             }
         }
@@ -270,7 +266,7 @@ impl ReplicationSlotManager {
         client
             .execute(&query, &[])
             .await
-            .map_err(|e| MeiliBridgeError::Source(format!("Failed to create slot: {}", e)))?;
+            .map_err(|e| MeiliBridgeError::Source(format!("Failed to create slot: {e}")))?;
 
         info!("Created replication slot '{}'", self.slot_name);
         Ok(())
@@ -292,8 +288,7 @@ impl ReplicationSlotManager {
             }
             Err(e) => {
                 return Err(MeiliBridgeError::Source(format!(
-                    "Failed to check publication: {}",
-                    e
+                    "Failed to check publication: {e}",
                 )));
             }
         }
@@ -309,9 +304,10 @@ impl ReplicationSlotManager {
             self.publication_name, table_list
         );
 
-        client.execute(&query, &[]).await.map_err(|e| {
-            MeiliBridgeError::Source(format!("Failed to create publication: {}", e))
-        })?;
+        client
+            .execute(&query, &[])
+            .await
+            .map_err(|e| MeiliBridgeError::Source(format!("Failed to create publication: {e}")))?;
 
         info!("Created publication '{}'", self.publication_name);
         Ok(())

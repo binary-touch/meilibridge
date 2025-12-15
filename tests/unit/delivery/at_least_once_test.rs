@@ -49,13 +49,13 @@ mod at_least_once_tests {
 
         // Add keys until window is full
         for i in 0..10 {
-            let key = create_dedup_key(&format!("0/{}", i), i as u32, "events");
+            let key = create_dedup_key(&format!("0/{i}"), i as u32, "events");
             manager.mark_processed(key).await.unwrap();
         }
 
         // Verify all keys are tracked
         for i in 0..10 {
-            let key = create_dedup_key(&format!("0/{}", i), i as u32, "events");
+            let key = create_dedup_key(&format!("0/{i}"), i as u32, "events");
             assert!(manager.is_duplicate(&key).await.unwrap());
         }
 
@@ -149,7 +149,7 @@ mod at_least_once_tests {
         // Start multiple concurrent transactions
         for i in 0..5 {
             let manager_clone = manager.clone();
-            let task_id = format!("task_{}", i);
+            let task_id = format!("task_{i}");
 
             let handle = tokio::spawn(async move {
                 // Begin transaction
@@ -271,7 +271,7 @@ mod at_least_once_tests {
 
         // Process unique events
         for i in 0..num_events {
-            let key = create_dedup_key(&format!("0/{:08x}", i), i as u32, "high_throughput");
+            let key = create_dedup_key(&format!("0/{i:08x}"), i as u32, "high_throughput");
             assert!(!manager.is_duplicate(&key).await.unwrap());
             manager.mark_processed(key.clone()).await.unwrap();
             processed_keys.push(key);

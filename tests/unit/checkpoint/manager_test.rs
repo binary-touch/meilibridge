@@ -124,7 +124,7 @@ mod checkpoint_manager_tests {
 
         // Create multiple checkpoints
         for i in 1..=5 {
-            let checkpoint = create_test_checkpoint(&format!("task_{}", i));
+            let checkpoint = create_test_checkpoint(&format!("task_{i}"));
             storage.save(&checkpoint).await.unwrap();
         }
 
@@ -135,7 +135,7 @@ mod checkpoint_manager_tests {
         // Verify all task IDs are present
         let task_ids: Vec<String> = checkpoints.iter().map(|c| c.task_id.clone()).collect();
         for i in 1..=5 {
-            assert!(task_ids.contains(&format!("task_{}", i)));
+            assert!(task_ids.contains(&format!("task_{i}")));
         }
     }
 

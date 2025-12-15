@@ -52,7 +52,7 @@ impl StatementCache {
         if !self.config.enabled {
             // Cache disabled, prepare directly
             return client.prepare(query).await.map_err(|e| {
-                MeiliBridgeError::Source(format!("Failed to prepare statement: {}", e))
+                MeiliBridgeError::Source(format!("Failed to prepare statement: {e}"))
             });
         }
 
@@ -73,7 +73,7 @@ impl StatementCache {
         let stmt = client
             .prepare(query)
             .await
-            .map_err(|e| MeiliBridgeError::Source(format!("Failed to prepare statement: {}", e)))?;
+            .map_err(|e| MeiliBridgeError::Source(format!("Failed to prepare statement: {e}")))?;
 
         // Add to cache
         let mut cache = self.cache.write().await;
@@ -204,7 +204,7 @@ impl CachedConnection {
         self.client
             .query(&stmt, params)
             .await
-            .map_err(|e| MeiliBridgeError::Source(format!("Query execution failed: {}", e)))
+            .map_err(|e| MeiliBridgeError::Source(format!("Query execution failed: {e}")))
     }
 
     /// Execute a query that returns at most one row
@@ -220,7 +220,7 @@ impl CachedConnection {
         self.client
             .query_opt(&stmt, params)
             .await
-            .map_err(|e| MeiliBridgeError::Source(format!("Query execution failed: {}", e)))
+            .map_err(|e| MeiliBridgeError::Source(format!("Query execution failed: {e}")))
     }
 
     /// Execute a query that returns exactly one row
@@ -236,7 +236,7 @@ impl CachedConnection {
         self.client
             .query_one(&stmt, params)
             .await
-            .map_err(|e| MeiliBridgeError::Source(format!("Query execution failed: {}", e)))
+            .map_err(|e| MeiliBridgeError::Source(format!("Query execution failed: {e}")))
     }
 
     /// Execute a statement
@@ -249,7 +249,7 @@ impl CachedConnection {
         self.client
             .execute(&stmt, params)
             .await
-            .map_err(|e| MeiliBridgeError::Source(format!("Statement execution failed: {}", e)))
+            .map_err(|e| MeiliBridgeError::Source(format!("Statement execution failed: {e}")))
     }
 
     /// Get the underlying client for operations that don't support caching

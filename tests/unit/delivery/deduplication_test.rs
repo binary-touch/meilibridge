@@ -56,7 +56,7 @@ mod deduplication_tests {
 
         // Fill the window
         for i in 0..5 {
-            let key = DeduplicationKey::new(format!("0/{}", i), None, "test".to_string());
+            let key = DeduplicationKey::new(format!("0/{i}"), None, "test".to_string());
             dedup.add(key);
         }
 
@@ -72,7 +72,7 @@ mod deduplication_tests {
 
         // Others should still be present
         for i in 1..6 {
-            let key = DeduplicationKey::new(format!("0/{}", i), None, "test".to_string());
+            let key = DeduplicationKey::new(format!("0/{i}"), None, "test".to_string());
             assert!(dedup.contains(&key));
         }
 
@@ -102,7 +102,7 @@ mod deduplication_tests {
 
         // Add some keys
         for i in 0..10 {
-            let key = DeduplicationKey::new(format!("0/{}", i), Some(i as u32), "test".to_string());
+            let key = DeduplicationKey::new(format!("0/{i}"), Some(i as u32), "test".to_string());
             dedup.add(key);
         }
 
@@ -115,7 +115,7 @@ mod deduplication_tests {
 
         // Previously added keys should not be duplicates anymore
         for i in 0..10 {
-            let key = DeduplicationKey::new(format!("0/{}", i), Some(i as u32), "test".to_string());
+            let key = DeduplicationKey::new(format!("0/{i}"), Some(i as u32), "test".to_string());
             assert!(!dedup.contains(&key));
         }
     }
@@ -165,11 +165,8 @@ mod deduplication_tests {
 
         for table in &tables {
             for i in 0..10 {
-                let key = DeduplicationKey::new(
-                    format!("0/{:04x}", i),
-                    Some(i as u32),
-                    table.to_string(),
-                );
+                let key =
+                    DeduplicationKey::new(format!("0/{i:04x}"), Some(i as u32), table.to_string());
                 dedup.add(key);
                 total_keys += 1;
             }
@@ -181,11 +178,8 @@ mod deduplication_tests {
         // Verify all keys are tracked
         for table in &tables {
             for i in 0..10 {
-                let key = DeduplicationKey::new(
-                    format!("0/{:04x}", i),
-                    Some(i as u32),
-                    table.to_string(),
-                );
+                let key =
+                    DeduplicationKey::new(format!("0/{i:04x}"), Some(i as u32), table.to_string());
                 assert!(dedup.contains(&key));
             }
         }
@@ -201,7 +195,7 @@ mod deduplication_tests {
             // Fill to capacity
             for i in 0..window_size {
                 let key = DeduplicationKey::new(
-                    format!("0/{:08x}", i),
+                    format!("0/{i:08x}"),
                     Some(i as u32),
                     "perf_test".to_string(),
                 );
@@ -214,7 +208,7 @@ mod deduplication_tests {
             // Add more to trigger evictions
             for i in window_size..(window_size * 2) {
                 let key = DeduplicationKey::new(
-                    format!("0/{:08x}", i),
+                    format!("0/{i:08x}"),
                     Some(i as u32),
                     "perf_test".to_string(),
                 );

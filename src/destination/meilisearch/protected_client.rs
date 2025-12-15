@@ -118,8 +118,7 @@ impl ProtectedMeilisearchClient {
                                                 .map_err(convert_error)
                                         } else {
                                             Err(MeiliBridgeError::Meilisearch(format!(
-                                                "Failed to create index: {:?}",
-                                                task_info
+                                                "Failed to create index: {task_info:?}",
                                             )))
                                         }
                                     }
@@ -156,8 +155,7 @@ impl ProtectedMeilisearchClient {
                                 .map_err(convert_error)
                         } else {
                             Err(MeiliBridgeError::Meilisearch(format!(
-                                "Failed to create index: {:?}",
-                                task_info
+                                "Failed to create index: {task_info:?}",
                             )))
                         }
                     }
@@ -198,8 +196,7 @@ impl ProtectedMeilisearchClient {
                                     Ok(())
                                 } else {
                                     Err(MeiliBridgeError::Meilisearch(format!(
-                                        "Add documents failed: {:?}",
-                                        task_info
+                                        "Add documents failed: {task_info:?}",
                                     )))
                                 }
                             }
@@ -229,8 +226,7 @@ impl ProtectedMeilisearchClient {
                         Ok(())
                     } else {
                         Err(MeiliBridgeError::Meilisearch(format!(
-                            "Add documents failed: {:?}",
-                            task_info
+                            "Add documents failed: {task_info:?}",
                         )))
                     }
                 }
@@ -261,8 +257,7 @@ impl ProtectedMeilisearchClient {
                                     Ok(())
                                 } else {
                                     Err(MeiliBridgeError::Meilisearch(format!(
-                                        "Delete documents failed: {:?}",
-                                        task_info
+                                        "Delete documents failed: {task_info:?}",
                                     )))
                                 }
                             }
@@ -292,8 +287,7 @@ impl ProtectedMeilisearchClient {
                         Ok(())
                     } else {
                         Err(MeiliBridgeError::Meilisearch(format!(
-                            "Delete documents failed: {:?}",
-                            task_info
+                            "Delete documents failed: {task_info:?}",
                         )))
                     }
                 }

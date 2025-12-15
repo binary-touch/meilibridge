@@ -12,7 +12,7 @@ mod replication_slot_tests {
     async fn test_replication_slot_creation() {
         let postgres = start_postgres_with_cdc().await;
         let port = postgres.get_host_port_ipv4(5432).await.unwrap();
-        let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let connection_string = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&connection_string).await.unwrap();
 
@@ -24,7 +24,7 @@ mod replication_slot_tests {
 
         tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -47,7 +47,7 @@ mod replication_slot_tests {
 
         tokio::spawn(async move {
             if let Err(e) = verify_connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -68,7 +68,7 @@ mod replication_slot_tests {
     async fn test_replication_slot_deletion() {
         let postgres = start_postgres_with_cdc().await;
         let port = postgres.get_host_port_ipv4(5432).await.unwrap();
-        let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let connection_string = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&connection_string).await.unwrap();
 
@@ -80,7 +80,7 @@ mod replication_slot_tests {
 
         tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -101,7 +101,7 @@ mod replication_slot_tests {
 
         tokio::spawn(async move {
             if let Err(e) = drop_connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -126,7 +126,7 @@ mod replication_slot_tests {
     async fn test_slot_recovery_after_disconnect() {
         let postgres = start_postgres_with_cdc().await;
         let port = postgres.get_host_port_ipv4(5432).await.unwrap();
-        let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let connection_string = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&connection_string).await.unwrap();
 
@@ -140,7 +140,7 @@ mod replication_slot_tests {
 
         let conn_handle = tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -164,7 +164,7 @@ mod replication_slot_tests {
 
         tokio::spawn(async move {
             if let Err(e) = verify_connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -185,7 +185,7 @@ mod replication_slot_tests {
     async fn test_multiple_slots() {
         let postgres = start_postgres_with_cdc().await;
         let port = postgres.get_host_port_ipv4(5432).await.unwrap();
-        let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let connection_string = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&connection_string).await.unwrap();
 
@@ -199,7 +199,7 @@ mod replication_slot_tests {
 
         tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -221,7 +221,7 @@ mod replication_slot_tests {
 
         tokio::spawn(async move {
             if let Err(e) = verify_connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -248,7 +248,7 @@ mod replication_slot_tests {
     async fn test_slot_with_publication() {
         let postgres = start_postgres_with_cdc().await;
         let port = postgres.get_host_port_ipv4(5432).await.unwrap();
-        let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let connection_string = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&connection_string).await.unwrap();
 
@@ -260,7 +260,7 @@ mod replication_slot_tests {
 
         tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -305,7 +305,7 @@ mod replication_slot_tests {
     async fn test_slot_cleanup_on_failure() {
         let postgres = start_postgres_with_cdc().await;
         let port = postgres.get_host_port_ipv4(5432).await.unwrap();
-        let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let connection_string = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&connection_string).await.unwrap();
 
@@ -319,7 +319,7 @@ mod replication_slot_tests {
 
         tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -350,7 +350,7 @@ mod replication_slot_tests {
 
         tokio::spawn(async move {
             if let Err(e) = cleanup_connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 

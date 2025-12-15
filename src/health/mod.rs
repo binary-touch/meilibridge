@@ -164,7 +164,7 @@ impl HealthCheck for PostgresHealthCheck {
         {
             let mut connector = self.connector.write().await;
             if let Err(e) = connector.ensure_connected().await {
-                return HealthCheckResult::unhealthy(format!("Failed to connect: {}", e));
+                return HealthCheckResult::unhealthy(format!("Failed to connect: {e}"));
             }
         }
 
@@ -185,10 +185,10 @@ impl HealthCheck for PostgresHealthCheck {
                                 serde_json::json!(pool.status().available),
                             )
                     }
-                    Err(e) => HealthCheckResult::unhealthy(format!("Query failed: {}", e)),
+                    Err(e) => HealthCheckResult::unhealthy(format!("Query failed: {e}")),
                 }
             }
-            Err(e) => HealthCheckResult::unhealthy(format!("Failed to get client: {}", e)),
+            Err(e) => HealthCheckResult::unhealthy(format!("Failed to get client: {e}")),
         }
     }
 
@@ -217,7 +217,7 @@ impl HealthCheck for MeilisearchHealthCheck {
         ) {
             Ok(client) => client,
             Err(e) => {
-                return HealthCheckResult::unhealthy(format!("Failed to create client: {}", e));
+                return HealthCheckResult::unhealthy(format!("Failed to create client: {e}"));
             }
         };
 
@@ -226,7 +226,7 @@ impl HealthCheck for MeilisearchHealthCheck {
             Ok(health) => {
                 HealthCheckResult::healthy().with_detail("status", serde_json::json!(health.status))
             }
-            Err(e) => HealthCheckResult::unhealthy(format!("Health check failed: {}", e)),
+            Err(e) => HealthCheckResult::unhealthy(format!("Health check failed: {e}")),
         }
     }
 
@@ -290,13 +290,13 @@ impl HealthCheck for RedisHealthCheck {
                             Ok(_) => {
                                 HealthCheckResult::degraded("Unexpected PING response".to_string())
                             }
-                            Err(e) => HealthCheckResult::unhealthy(format!("PING failed: {}", e)),
+                            Err(e) => HealthCheckResult::unhealthy(format!("PING failed: {e}")),
                         }
                     }
-                    Err(e) => HealthCheckResult::unhealthy(format!("Connection failed: {}", e)),
+                    Err(e) => HealthCheckResult::unhealthy(format!("Connection failed: {e}")),
                 }
             }
-            Err(e) => HealthCheckResult::unhealthy(format!("Failed to create client: {}", e)),
+            Err(e) => HealthCheckResult::unhealthy(format!("Failed to create client: {e}")),
         }
     }
 
@@ -335,7 +335,7 @@ impl HealthCheck for ApiHealthCheck {
             }
             Err(e) => {
                 // API might not be accessible locally, but that doesn't mean it's unhealthy
-                HealthCheckResult::degraded(format!("Could not reach API: {}", e))
+                HealthCheckResult::degraded(format!("Could not reach API: {e}"))
                     .with_detail("port", serde_json::json!(self.port))
             }
         }

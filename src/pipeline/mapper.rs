@@ -147,7 +147,7 @@ impl FieldMapper {
                 let prefix = self.config.unmapped_fields_prefix.as_deref().unwrap_or("_");
                 for (k, v) in data {
                     if !mapped_sources.contains(&k) {
-                        result.insert(format!("{}{}", prefix, k), v);
+                        result.insert(format!("{prefix}{k}"), v);
                     }
                 }
             }

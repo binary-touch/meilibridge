@@ -639,8 +639,7 @@ impl PipelineOrchestrator {
             // Get the source adapter
             let source_adapter = self.source_adapters.get_mut(&source_name).ok_or_else(|| {
                 MeiliBridgeError::Pipeline(format!(
-                    "Source adapter '{}' not found for sync tasks",
-                    source_name
+                    "Source adapter '{source_name}' not found for sync tasks",
                 ))
             })?;
 
@@ -1707,7 +1706,7 @@ impl PipelineOrchestrator {
                         .at_least_once_manager
                         .rollback(&transaction_id)
                         .await?;
-                    return Err(MeiliBridgeError::Pipeline(format!("Send failed: {}", e)));
+                    return Err(MeiliBridgeError::Pipeline(format!("Send failed: {e}")));
                 }
             }
         }
@@ -2068,7 +2067,7 @@ impl PipelineOrchestrator {
             .sync_tasks
             .iter()
             .find(|t| t.id == task_id)
-            .ok_or_else(|| MeiliBridgeError::NotFound(format!("Task '{}' not found", task_id)))?
+            .ok_or_else(|| MeiliBridgeError::NotFound(format!("Task '{task_id}' not found")))?
             .clone();
 
         info!("Triggering full sync for task '{}'", task_id);

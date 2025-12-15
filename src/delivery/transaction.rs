@@ -56,8 +56,7 @@ impl TwoPhaseCommit {
 
         if txns.contains_key(&transaction_id) {
             return Err(MeiliBridgeError::Pipeline(format!(
-                "Transaction {} already exists",
-                transaction_id
+                "Transaction {transaction_id} already exists",
             )));
         }
 
@@ -81,7 +80,7 @@ impl TwoPhaseCommit {
         let mut txns = self.transactions.write().await;
 
         let txn = txns.get_mut(transaction_id).ok_or_else(|| {
-            MeiliBridgeError::Pipeline(format!("Transaction {} not found", transaction_id))
+            MeiliBridgeError::Pipeline(format!("Transaction {transaction_id} not found"))
         })?;
 
         if txn.state != TransactionState::Started {
@@ -103,7 +102,7 @@ impl TwoPhaseCommit {
         let mut txns = self.transactions.write().await;
 
         let txn = txns.get_mut(transaction_id).ok_or_else(|| {
-            MeiliBridgeError::Pipeline(format!("Transaction {} not found", transaction_id))
+            MeiliBridgeError::Pipeline(format!("Transaction {transaction_id} not found"))
         })?;
 
         if txn.state != TransactionState::Prepared {

@@ -44,8 +44,7 @@ impl TransactionalCheckpoint {
         // Check if transaction already exists
         if txns.iter().any(|t| t.transaction_id == transaction_id) {
             return Err(MeiliBridgeError::Pipeline(format!(
-                "Transaction {} already exists",
-                transaction_id
+                "Transaction {transaction_id} already exists",
             )));
         }
 
@@ -72,7 +71,7 @@ impl TransactionalCheckpoint {
             .iter_mut()
             .find(|t| t.transaction_id == transaction_id)
             .ok_or_else(|| {
-                MeiliBridgeError::Pipeline(format!("Transaction {} not found", transaction_id))
+                MeiliBridgeError::Pipeline(format!("Transaction {transaction_id} not found"))
             })?;
 
         if txn.prepared {
@@ -119,15 +118,14 @@ impl TransactionalCheckpoint {
             .iter()
             .position(|t| t.transaction_id == transaction_id)
             .ok_or_else(|| {
-                MeiliBridgeError::Pipeline(format!("Transaction {} not found", transaction_id))
+                MeiliBridgeError::Pipeline(format!("Transaction {transaction_id} not found"))
             })?;
 
         let txn = &mut txns[txn_index];
 
         if !txn.prepared {
             return Err(MeiliBridgeError::Pipeline(format!(
-                "Transaction {} not prepared",
-                transaction_id
+                "Transaction {transaction_id} not prepared",
             )));
         }
 
@@ -138,7 +136,7 @@ impl TransactionalCheckpoint {
 
         // Load the checkpoint
         let checkpoint = self.storage.load(&txn.task_id).await?.ok_or_else(|| {
-            MeiliBridgeError::Pipeline(format!("Checkpoint not found for task {}", txn.task_id))
+            MeiliBridgeError::Pipeline(format!("Checkpoint not found for task {0}", txn.task_id))
         })?;
 
         // Update checkpoint metadata to mark as committed
@@ -168,7 +166,7 @@ impl TransactionalCheckpoint {
             .iter()
             .position(|t| t.transaction_id == transaction_id)
             .ok_or_else(|| {
-                MeiliBridgeError::Pipeline(format!("Transaction {} not found", transaction_id))
+                MeiliBridgeError::Pipeline(format!("Transaction {transaction_id} not found"))
             })?;
 
         let txn = &txns[txn_index];

@@ -45,7 +45,7 @@ impl TestApiServer {
         // Wait for server to start
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
-        let base_url = format!("http://{}", addr);
+        let base_url = format!("http://{addr}");
         let client = Client::new();
 
         Self {
@@ -64,7 +64,7 @@ impl TestApiServer {
     /// Make a GET request
     pub async fn get(&self, path: &str) -> reqwest::Response {
         self.client
-            .get(format!("{}{}", self.base_url, path))
+            .get(format!("{}{path}", self.base_url))
             .send()
             .await
             .expect("Failed to send GET request")
@@ -73,7 +73,7 @@ impl TestApiServer {
     /// Make a POST request with JSON body
     pub async fn post_json<T: serde::Serialize>(&self, path: &str, json: &T) -> reqwest::Response {
         self.client
-            .post(format!("{}{}", self.base_url, path))
+            .post(format!("{}{path}", self.base_url))
             .json(json)
             .send()
             .await
@@ -83,7 +83,7 @@ impl TestApiServer {
     /// Make a PUT request with JSON body
     pub async fn put_json<T: serde::Serialize>(&self, path: &str, json: &T) -> reqwest::Response {
         self.client
-            .put(format!("{}{}", self.base_url, path))
+            .put(format!("{}{path}", self.base_url))
             .json(json)
             .send()
             .await
@@ -93,7 +93,7 @@ impl TestApiServer {
     /// Make a DELETE request
     pub async fn delete(&self, path: &str) -> reqwest::Response {
         self.client
-            .delete(format!("{}{}", self.base_url, path))
+            .delete(format!("{}{path}", self.base_url))
             .send()
             .await
             .expect("Failed to send DELETE request")
@@ -155,8 +155,7 @@ pub mod assertions {
         let status = response.status();
         assert_eq!(
             status, expected,
-            "Expected status {} but got {}",
-            expected, status
+            "Expected status {expected} but got {status}",
         );
         response
     }
@@ -168,11 +167,10 @@ pub mod assertions {
             .expect("Failed to parse JSON response");
         let actual = json
             .get(field)
-            .unwrap_or_else(|| panic!("Field '{}' not found in response", field));
+            .unwrap_or_else(|| panic!("Field '{field}' not found in response"));
         assert_eq!(
             actual, expected,
-            "Field '{}' expected to be {:?} but was {:?}",
-            field, expected, actual
+            "Field '{field}' expected to be {expected:?} but was {actual:?}",
         );
         // Return the parsed JSON for further assertions
         json

@@ -121,15 +121,14 @@ pub mod sql {
         client
             .execute(
                 &format!(
-                    "CREATE TABLE IF NOT EXISTS {} (
+                    "CREATE TABLE IF NOT EXISTS {table_name} (
                         id SERIAL PRIMARY KEY,
                         name TEXT NOT NULL,
                         email TEXT,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         deleted_at TIMESTAMP
-                    )",
-                    table_name
+                    )"
                 ),
                 &[],
             )

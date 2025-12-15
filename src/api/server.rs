@@ -93,9 +93,9 @@ impl ApiServer {
         let host = &self.config.api.host;
         let port = self.config.api.port;
 
-        let addr: SocketAddr = format!("{}:{}", host, port)
+        let addr: SocketAddr = format!("{host}:{port}")
             .parse()
-            .map_err(|e| MeiliBridgeError::Configuration(format!("Invalid API address: {}", e)))?;
+            .map_err(|e| MeiliBridgeError::Configuration(format!("Invalid API address: {e}")))?;
 
         info!("Starting API server on {}", addr);
 
@@ -107,20 +107,14 @@ impl ApiServer {
                 Ok(listener) => break listener,
                 Err(e) if retry_count < max_retries => {
                     warn!(
-                        "Failed to bind to {}: {}. Retrying in 2 seconds... ({}/{})",
-                        addr,
-                        e,
+                        "Failed to bind to {addr}: {e}. Retrying in 2 seconds... ({}/{max_retries})",
                         retry_count + 1,
-                        max_retries
                     );
                     retry_count += 1;
                     tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
                 }
                 Err(e) => {
-                    error!(
-                        "Failed to bind to {} after {} retries: {}",
-                        addr, max_retries, e
-                    );
+                    error!("Failed to bind to {addr} after {max_retries} retries: {e}");
                     return Err(MeiliBridgeError::Io(e));
                 }
             }

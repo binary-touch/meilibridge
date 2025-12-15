@@ -23,7 +23,7 @@ This guide covers installation, setup, and deployment of MeiliBridge for both de
 ### Required Software
 - **Rust**: 1.88 or higher
 - **PostgreSQL**: 10+ with logical replication support
-- **Meilisearch**: 1.12+ (destination database)
+- **Meilisearch**: 1.0+ (destination database)
 - **Redis**: 6.0+ (for checkpoint storage and dead letter queue)
 - **Docker**: 20.10+ (for containerized deployment)
 - **Git**: For source code management

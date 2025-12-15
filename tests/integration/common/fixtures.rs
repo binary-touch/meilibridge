@@ -33,10 +33,7 @@ pub async fn setup_postgres_replication(
     let tables_list = tables.join(", ");
     client
         .execute(
-            &format!(
-                "CREATE PUBLICATION {} FOR TABLE {}",
-                publication, tables_list
-            ),
+            &format!("CREATE PUBLICATION {publication} FOR TABLE {tables_list}"),
             &[],
         )
         .await?;
@@ -51,15 +48,14 @@ pub async fn create_test_table(
     client
         .execute(
             &format!(
-                "CREATE TABLE {} (
+                "CREATE TABLE {table_name} (
                     id SERIAL PRIMARY KEY,
                     name TEXT NOT NULL,
                     email TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     deleted_at TIMESTAMP
-                )",
-                table_name
+                )"
             ),
             &[],
         )

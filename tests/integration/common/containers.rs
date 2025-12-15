@@ -30,7 +30,7 @@ impl TestContainers {
                 .get_host_port_ipv4(5432)
                 .await
                 .expect("Failed to get port");
-            format!("postgresql://postgres:postgres@localhost:{}/postgres", port)
+            format!("postgresql://postgres:postgres@localhost:{port}/postgres")
         } else {
             panic!("PostgreSQL container not started");
         }
@@ -42,7 +42,7 @@ impl TestContainers {
                 .get_host_port_ipv4(6379)
                 .await
                 .expect("Failed to get port");
-            format!("redis://localhost:{}", port)
+            format!("redis://localhost:{port}")
         } else {
             panic!("Redis container not started");
         }
@@ -54,7 +54,7 @@ impl TestContainers {
                 .get_host_port_ipv4(7700)
                 .await
                 .expect("Failed to get port");
-            format!("http://localhost:{}", port)
+            format!("http://localhost:{port}")
         } else {
             panic!("Meilisearch container not started");
         }
@@ -189,7 +189,7 @@ pub async fn wait_for_postgres(url: &str) -> Result<(), Box<dyn std::error::Erro
                 // Spawn connection handler
                 tokio::spawn(async move {
                     if let Err(e) = connection.await {
-                        eprintln!("connection error: {}", e);
+                        eprintln!("connection error: {e}");
                     }
                 });
 
@@ -235,10 +235,10 @@ pub async fn wait_for_meilisearch(url: &str) -> Result<(), Box<dyn std::error::E
     let mut retries = 0;
 
     let client = reqwest::Client::new();
-    println!("Waiting for Meilisearch at {}...", url);
+    println!("Waiting for Meilisearch at {url}...");
 
     loop {
-        match client.get(format!("{}/health", url)).send().await {
+        match client.get(format!("{url}/health")).send().await {
             Ok(response) => {
                 if response.status().is_success() {
                     println!("Meilisearch is ready!");
@@ -260,9 +260,7 @@ pub async fn wait_for_meilisearch(url: &str) -> Result<(), Box<dyn std::error::E
 
         retries += 1;
         if retries >= max_retries {
-            return Err(
-                format!("Meilisearch failed to start after {} attempts", max_retries).into(),
-            );
+            return Err(format!("Meilisearch failed to start after {max_retries} attempts").into());
         }
         tokio::time::sleep(Duration::from_millis(500)).await;
     }

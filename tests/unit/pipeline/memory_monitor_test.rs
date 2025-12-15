@@ -143,7 +143,7 @@ mod memory_monitor_tests {
                     // Each task allocates 5 x 2MB = 10MB total
                     let alloc = monitor_clone
                         .track_event_memory(2 * 1024 * 1024)
-                        .unwrap_or_else(|_| panic!("Task {} allocation {} should succeed", i, j));
+                        .unwrap_or_else(|_| panic!("Task {i} allocation {j} should succeed"));
                     allocations.push(alloc);
                     tokio::task::yield_now().await;
                 }

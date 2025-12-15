@@ -163,8 +163,7 @@ impl FileDeadLetterStorage {
     }
 
     fn get_entry_path(&self, task_id: &str, entry_id: &str) -> PathBuf {
-        self.get_task_dir(task_id)
-            .join(format!("{}.json", entry_id))
+        self.get_task_dir(task_id).join(format!("{entry_id}.json"))
     }
 }
 

@@ -72,7 +72,7 @@ mod api_server_tests {
 
         let client = Client::new();
         let response = client
-            .get(format!("http://{}/tasks", addr))
+            .get(format!("http://{addr}/tasks"))
             .send()
             .await
             .unwrap();
@@ -90,7 +90,7 @@ mod api_server_tests {
 
         let client = Client::new();
         let response = client
-            .get(format!("http://{}/tasks/nonexistent", addr))
+            .get(format!("http://{addr}/tasks/nonexistent"))
             .send()
             .await
             .unwrap();
@@ -110,7 +110,7 @@ mod api_server_tests {
 
         let client = Client::new();
         let response = client
-            .get(format!("http://{}/cdc/status", addr))
+            .get(format!("http://{addr}/cdc/status"))
             .send()
             .await
             .unwrap();
@@ -159,7 +159,7 @@ mod api_server_tests {
         });
 
         let response = client
-            .post(format!("http://{}/tasks", addr))
+            .post(format!("http://{addr}/tasks"))
             .json(&new_task)
             .send()
             .await
@@ -188,7 +188,7 @@ mod api_server_tests {
 
             let handle = tokio::spawn(async move {
                 let response = client_clone
-                    .get(format!("http://{}/health", addr_str))
+                    .get(format!("http://{addr_str}/health"))
                     .header("X-Request-ID", i.to_string())
                     .send()
                     .await
@@ -215,7 +215,7 @@ mod api_server_tests {
 
         // Test non-existent component
         let response = client
-            .get(format!("http://{}/health/nonexistent", addr))
+            .get(format!("http://{addr}/health/nonexistent"))
             .send()
             .await
             .unwrap();
