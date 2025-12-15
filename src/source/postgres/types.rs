@@ -1,5 +1,5 @@
 use crate::error::{MeiliBridgeError, Result};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::str;
 
 /// PostgreSQL type OIDs
@@ -58,7 +58,7 @@ pub mod oids {
 /// Decode a PostgreSQL value from its text representation
 pub fn decode_value(bytes: &[u8], type_oid: u32) -> Result<Value> {
     let text = str::from_utf8(bytes)
-        .map_err(|e| MeiliBridgeError::Source(format!("Invalid UTF-8: {}", e)))?;
+        .map_err(|e| MeiliBridgeError::Source(format!("Invalid UTF-8: {e}")))?;
 
     // Handle array types
     if is_array_type(type_oid) {

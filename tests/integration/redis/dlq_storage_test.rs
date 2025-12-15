@@ -2,6 +2,7 @@
 
 // Note: redis_storage module is private, so we can't directly test it
 // These tests demonstrate DLQ patterns using Redis directly
+use crate::common::containers::Container;
 use chrono::Utc;
 use meilibridge::error::MeiliBridgeError;
 use meilibridge::models::event::{
@@ -10,23 +11,21 @@ use meilibridge::models::event::{
 use redis::Commands;
 use serde_json::json;
 use std::collections::HashMap;
-use testcontainers::Container;
 use testcontainers_modules::redis::Redis;
 
 #[cfg(test)]
 mod redis_dlq_tests {
     use super::*;
 
-    async fn setup_redis(
-    ) -> Result<(Container<'static, Redis>, redis::Client, String), Box<dyn std::error::Error>>
-    {
+    async fn setup_redis()
+    -> Result<(Container<Redis>, redis::Client, String), Box<dyn std::error::Error>> {
         crate::common::setup_redis().await
     }
 
     fn create_test_event(id: i32) -> Event {
         let mut data = HashMap::new();
         data.insert("id".to_string(), json!(id));
-        data.insert("name".to_string(), json!(format!("Test Event {}", id)));
+        data.insert("name".to_string(), json!(format!("Test Event {id}")));
 
         Event {
             id: EventId::new(),
@@ -106,7 +105,7 @@ mod redis_dlq_tests {
         // Create multiple failed events
         for i in 1..=100 {
             let event = create_test_event(i);
-            let error = MeiliBridgeError::Database(format!("Error {}", i));
+            let error = MeiliBridgeError::Database(format!("Error {i}"));
             let entry = create_dlq_entry(event, error, i as u32 % 5);
             entries.push(serde_json::to_string(&entry).unwrap());
         }
@@ -153,7 +152,7 @@ mod redis_dlq_tests {
         // Add events with different retry counts
         for i in 1..=10 {
             let event = create_test_event(i);
-            let error = MeiliBridgeError::Validation(format!("Validation error {}", i));
+            let error = MeiliBridgeError::Validation(format!("Validation error {i}"));
             let entry = create_dlq_entry(event, error, i as u32);
             let _: Result<i32, redis::RedisError> =
                 conn.rpush(dlq_key, serde_json::to_string(&entry).unwrap());
@@ -241,7 +240,7 @@ mod redis_dlq_tests {
         let mut total_events: usize = 0;
 
         for task in &tasks {
-            let dlq_key = format!("dlq:{}", task);
+            let dlq_key = format!("dlq:{task}");
             let event_count = match *task {
                 "task_a" => 15usize,
                 "task_b" => 8usize,
@@ -264,7 +263,7 @@ mod redis_dlq_tests {
         let mut stats = HashMap::new();
 
         for task in &tasks {
-            let dlq_key = format!("dlq:{}", task);
+            let dlq_key = format!("dlq:{task}");
             let count: Result<usize, redis::RedisError> = conn.llen(&dlq_key);
             stats.insert(task.to_string(), count.unwrap());
         }

@@ -33,10 +33,7 @@ pub async fn setup_postgres_replication(
     let tables_list = tables.join(", ");
     client
         .execute(
-            &format!(
-                "CREATE PUBLICATION {} FOR TABLE {}",
-                publication, tables_list
-            ),
+            &format!("CREATE PUBLICATION {publication} FOR TABLE {tables_list}"),
             &[],
         )
         .await?;
@@ -51,15 +48,14 @@ pub async fn create_test_table(
     client
         .execute(
             &format!(
-                "CREATE TABLE {} (
+                "CREATE TABLE {table_name} (
                     id SERIAL PRIMARY KEY,
                     name TEXT NOT NULL,
                     email TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     deleted_at TIMESTAMP
-                )",
-                table_name
+                )"
             ),
             &[],
         )
@@ -179,21 +175,21 @@ pub async fn create_test_api_state() -> ApiState {
 }
 
 pub async fn start_test_server(state: ApiState) -> (SocketAddr, tokio::task::JoinHandle<()>) {
-    use axum::routing::{delete, get, post, put};
     use axum::Router;
+    use axum::routing::{delete, get, post, put};
     use meilibridge::api::handlers;
 
     let app = Router::new()
         // Health check
         .route("/health", get(handlers::health))
-        .route("/health/:component", get(handlers::get_component_health))
+        .route("/health/{component}", get(handlers::get_component_health))
         // Task management
         .route("/tasks", get(handlers::get_tasks))
         .route("/tasks", post(handlers::create_task))
-        .route("/tasks/:id", get(handlers::get_task))
-        .route("/tasks/:id", delete(handlers::delete_task))
-        .route("/tasks/:id/pause", put(handlers::pause_task))
-        .route("/tasks/:id/resume", put(handlers::resume_task))
+        .route("/tasks/{id}", get(handlers::get_task))
+        .route("/tasks/{id}", delete(handlers::delete_task))
+        .route("/tasks/{id}/pause", put(handlers::pause_task))
+        .route("/tasks/{id}/resume", put(handlers::resume_task))
         // CDC control
         .route("/cdc/status", get(handlers::get_cdc_status))
         // Metrics

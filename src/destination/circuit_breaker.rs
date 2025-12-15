@@ -53,7 +53,7 @@ impl MeilisearchCircuitBreaker {
 
                 // Update metrics
                 crate::metrics::CIRCUIT_BREAKER_CALLS
-                    .with_label_values(&[&self.name, "rejected"])
+                    .with_label_values(&[self.name.as_str(), "rejected"])
                     .inc();
 
                 Err(CircuitBreakerError::CircuitOpen)
@@ -76,7 +76,7 @@ impl MeilisearchCircuitBreaker {
 
                         // Update metrics
                         crate::metrics::CIRCUIT_BREAKER_CALLS
-                            .with_label_values(&[&self.name, "success"])
+                            .with_label_values(&[self.name.as_str(), "success"])
                             .inc();
                     }
                     Err(e) => {
@@ -85,7 +85,7 @@ impl MeilisearchCircuitBreaker {
 
                         // Update metrics
                         crate::metrics::CIRCUIT_BREAKER_CALLS
-                            .with_label_values(&[&self.name, "failure"])
+                            .with_label_values(&[self.name.as_str(), "failure"])
                             .inc();
                     }
                 }
@@ -168,7 +168,9 @@ impl CircuitBreakerBuilder {
 
     pub fn error_rate(self, _rate: f64) -> Self {
         // Note: circuit_breaker 0.1.1 doesn't support error rate, only consecutive failures
-        warn!("Error rate configuration not supported in circuit_breaker 0.1.1, using consecutive failures instead");
+        warn!(
+            "Error rate configuration not supported in circuit_breaker 0.1.1, using consecutive failures instead"
+        );
         self
     }
 

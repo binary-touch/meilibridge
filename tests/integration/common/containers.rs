@@ -1,46 +1,60 @@
 // Test container utilities
+#![allow(clippy::collapsible_if)]
 
+use std::borrow::Cow;
+use std::collections::HashMap;
 use std::time::Duration;
-use testcontainers::{clients::Cli, core::WaitFor, Container as TestContainer, Image};
+use testcontainers::core::{ContainerPort, WaitFor};
+use testcontainers::runners::AsyncRunner;
+use testcontainers::{ContainerAsync, Image};
 use testcontainers_modules::{postgres::Postgres, redis::Redis};
 
 // Re-export Container type for easier use in tests
-pub type Container<'a, I> = TestContainer<'a, I>;
+pub type Container<I> = ContainerAsync<I>;
 
 #[derive(Default)]
-pub struct TestContainers<'a> {
-    pub postgres: Option<TestContainer<'a, Postgres>>,
-    pub redis: Option<TestContainer<'a, Redis>>,
-    pub meilisearch: Option<TestContainer<'a, MeilisearchImage>>,
+pub struct TestContainers {
+    pub postgres: Option<Container<Postgres>>,
+    pub redis: Option<Container<Redis>>,
+    pub meilisearch: Option<Container<MeilisearchImage>>,
 }
 
-impl<'a> TestContainers<'a> {
+impl TestContainers {
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn postgres_url(&self) -> String {
+    pub async fn postgres_url(&self) -> String {
         if let Some(container) = &self.postgres {
-            let port = container.get_host_port_ipv4(5432);
-            format!("postgresql://postgres:postgres@localhost:{}/postgres", port)
+            let port = container
+                .get_host_port_ipv4(5432)
+                .await
+                .expect("Failed to get port");
+            format!("postgresql://postgres:postgres@localhost:{port}/postgres")
         } else {
             panic!("PostgreSQL container not started");
         }
     }
 
-    pub fn redis_url(&self) -> String {
+    pub async fn redis_url(&self) -> String {
         if let Some(container) = &self.redis {
-            let port = container.get_host_port_ipv4(6379);
-            format!("redis://localhost:{}", port)
+            let port = container
+                .get_host_port_ipv4(6379)
+                .await
+                .expect("Failed to get port");
+            format!("redis://localhost:{port}")
         } else {
             panic!("Redis container not started");
         }
     }
 
-    pub fn meilisearch_url(&self) -> String {
+    pub async fn meilisearch_url(&self) -> String {
         if let Some(container) = &self.meilisearch {
-            let port = container.get_host_port_ipv4(7700);
-            format!("http://localhost:{}", port)
+            let port = container
+                .get_host_port_ipv4(7700)
+                .await
+                .expect("Failed to get port");
+            format!("http://localhost:{port}")
         } else {
             panic!("Meilisearch container not started");
         }
@@ -51,30 +65,29 @@ impl<'a> TestContainers<'a> {
 #[derive(Debug, Clone)]
 pub struct MeilisearchImage {
     tag: String,
-    env_vars: Vec<(String, String)>,
+    env_vars: HashMap<String, String>,
 }
 
 impl Default for MeilisearchImage {
     fn default() -> Self {
+        let mut env_vars = HashMap::new();
+        env_vars.insert("MEILI_MASTER_KEY".to_string(), "masterKey".to_string());
+        env_vars.insert("MEILI_ENV".to_string(), "development".to_string());
+
         MeilisearchImage {
-            tag: "v1.6".to_string(),
-            env_vars: vec![
-                ("MEILI_MASTER_KEY".to_string(), "masterKey".to_string()),
-                ("MEILI_ENV".to_string(), "development".to_string()),
-            ],
+            tag: "v1.13".to_string(),
+            env_vars,
         }
     }
 }
 
 impl Image for MeilisearchImage {
-    type Args = Vec<String>;
-
-    fn name(&self) -> String {
-        "getmeili/meilisearch".to_string()
+    fn name(&self) -> &str {
+        "getmeili/meilisearch"
     }
 
-    fn tag(&self) -> String {
-        self.tag.clone()
+    fn tag(&self) -> &str {
+        &self.tag
     }
 
     fn ready_conditions(&self) -> Vec<WaitFor> {
@@ -85,47 +98,49 @@ impl Image for MeilisearchImage {
         ]
     }
 
-    fn env_vars(&self) -> Box<dyn Iterator<Item = (&String, &String)> + '_> {
-        Box::new(self.env_vars.iter().map(|(k, v)| (k, v)))
+    fn env_vars(
+        &self,
+    ) -> impl IntoIterator<Item = (impl Into<Cow<'_, str>>, impl Into<Cow<'_, str>>)> {
+        &self.env_vars
     }
 
-    fn expose_ports(&self) -> Vec<u16> {
-        vec![7700]
+    fn expose_ports(&self) -> &[ContainerPort] {
+        &[ContainerPort::Tcp(7700)]
     }
 }
 
 // Container lifecycle helpers
-pub fn start_postgres(docker: &Cli) -> TestContainer<'_, Postgres> {
-    docker.run(Postgres::default())
+pub async fn start_postgres() -> Container<Postgres> {
+    Postgres::default()
+        .start()
+        .await
+        .expect("Failed to start Postgres")
 }
 
 // Custom PostgreSQL image with CDC support (wal_level=logical)
 #[derive(Debug, Clone)]
 pub struct PostgresCDCImage {
-    env_vars: Vec<(String, String)>,
+    env_vars: HashMap<String, String>,
 }
 
 impl Default for PostgresCDCImage {
     fn default() -> Self {
-        PostgresCDCImage {
-            env_vars: vec![
-                ("POSTGRES_USER".to_string(), "postgres".to_string()),
-                ("POSTGRES_PASSWORD".to_string(), "postgres".to_string()),
-                ("POSTGRES_DB".to_string(), "testdb".to_string()),
-            ],
-        }
+        let mut env_vars = HashMap::new();
+        env_vars.insert("POSTGRES_USER".to_string(), "postgres".to_string());
+        env_vars.insert("POSTGRES_PASSWORD".to_string(), "postgres".to_string());
+        env_vars.insert("POSTGRES_DB".to_string(), "testdb".to_string());
+
+        PostgresCDCImage { env_vars }
     }
 }
 
 impl Image for PostgresCDCImage {
-    type Args = ();
-
-    fn name(&self) -> String {
-        "binarytouch/postgres".to_string()
+    fn name(&self) -> &str {
+        "binarytouch/postgres"
     }
 
-    fn tag(&self) -> String {
-        "17".to_string()
+    fn tag(&self) -> &str {
+        "17"
     }
 
     fn ready_conditions(&self) -> Vec<WaitFor> {
@@ -135,27 +150,32 @@ impl Image for PostgresCDCImage {
         ]
     }
 
-    fn env_vars(&self) -> Box<dyn Iterator<Item = (&String, &String)> + '_> {
-        Box::new(self.env_vars.iter().map(|(k, v)| (k, v)))
+    fn env_vars(
+        &self,
+    ) -> impl IntoIterator<Item = (impl Into<Cow<'_, str>>, impl Into<Cow<'_, str>>)> {
+        &self.env_vars
     }
 
-    fn expose_ports(&self) -> Vec<u16> {
-        vec![5432]
+    fn expose_ports(&self) -> &[ContainerPort] {
+        &[ContainerPort::Tcp(5432)]
     }
 }
 
 // Start PostgreSQL with logical replication enabled
-pub fn start_postgres_with_cdc(docker: &Cli) -> TestContainer<'_, PostgresCDCImage> {
-    docker.run(PostgresCDCImage::default())
+pub async fn start_postgres_with_cdc() -> Container<PostgresCDCImage> {
+    PostgresCDCImage::default()
+        .start()
+        .await
+        .expect("Failed to start Postgres CDC")
 }
 
-pub fn start_redis(docker: &'static Cli) -> Container<'static, Redis> {
-    docker.run(Redis)
+pub async fn start_redis() -> Container<Redis> {
+    Redis.start().await.expect("Failed to start Redis")
 }
 
-pub fn start_meilisearch(docker: &Cli) -> TestContainer<'_, MeilisearchImage> {
+pub async fn start_meilisearch() -> Container<MeilisearchImage> {
     let image = MeilisearchImage::default();
-    docker.run(image)
+    image.start().await.expect("Failed to start Meilisearch")
 }
 
 // Wait for services to be ready
@@ -169,7 +189,7 @@ pub async fn wait_for_postgres(url: &str) -> Result<(), Box<dyn std::error::Erro
                 // Spawn connection handler
                 tokio::spawn(async move {
                     if let Err(e) = connection.await {
-                        eprintln!("connection error: {}", e);
+                        eprintln!("connection error: {e}");
                     }
                 });
 
@@ -215,10 +235,10 @@ pub async fn wait_for_meilisearch(url: &str) -> Result<(), Box<dyn std::error::E
     let mut retries = 0;
 
     let client = reqwest::Client::new();
-    println!("Waiting for Meilisearch at {}...", url);
+    println!("Waiting for Meilisearch at {url}...");
 
     loop {
-        match client.get(format!("{}/health", url)).send().await {
+        match client.get(format!("{url}/health")).send().await {
             Ok(response) => {
                 if response.status().is_success() {
                     println!("Meilisearch is ready!");
@@ -240,9 +260,7 @@ pub async fn wait_for_meilisearch(url: &str) -> Result<(), Box<dyn std::error::E
 
         retries += 1;
         if retries >= max_retries {
-            return Err(
-                format!("Meilisearch failed to start after {} attempts", max_retries).into(),
-            );
+            return Err(format!("Meilisearch failed to start after {max_retries} attempts").into());
         }
         tokio::time::sleep(Duration::from_millis(500)).await;
     }

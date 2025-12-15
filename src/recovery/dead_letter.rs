@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::fs;
 use tokio::io::AsyncWriteExt;
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::{RwLock, mpsc};
 use tracing::{debug, error, info, warn};
 
 /// Dead letter entry
@@ -163,8 +163,7 @@ impl FileDeadLetterStorage {
     }
 
     fn get_entry_path(&self, task_id: &str, entry_id: &str) -> PathBuf {
-        self.get_task_dir(task_id)
-            .join(format!("{}.json", entry_id))
+        self.get_task_dir(task_id).join(format!("{entry_id}.json"))
     }
 }
 

@@ -45,7 +45,9 @@ impl ReplicationConsumer {
 
                 if plugin == "pgoutput" {
                     // Drop and recreate with test_decoding
-                    warn!("Slot uses pgoutput plugin which requires binary protocol. Recreating with test_decoding...");
+                    warn!(
+                        "Slot uses pgoutput plugin which requires binary protocol. Recreating with test_decoding..."
+                    );
                     self.recreate_slot_with_test_decoding().await?;
                 }
 
@@ -85,7 +87,7 @@ impl ReplicationConsumer {
         self.client
             .execute(&query, &[])
             .await
-            .map_err(|e| MeiliBridgeError::Source(format!("Failed to create slot: {}", e)))?;
+            .map_err(|e| MeiliBridgeError::Source(format!("Failed to create slot: {e}")))?;
 
         info!(
             "Created replication slot '{}' with test_decoding plugin",
@@ -119,8 +121,7 @@ impl ReplicationConsumer {
 
                 // Use pg_logical_slot_get_changes for test_decoding
                 let query = format!(
-                    "SELECT lsn::text, xid::text, data FROM pg_logical_slot_get_changes('{}', NULL, NULL)",
-                    slot_name
+                    "SELECT lsn::text, xid::text, data FROM pg_logical_slot_get_changes('{slot_name}', NULL, NULL)",
                 );
 
                 match client.query(&query, &[]).await {
@@ -146,7 +147,9 @@ impl ReplicationConsumer {
                                         match tx.send(Ok(event)).await {
                                             Ok(_) => debug!("CDC: Event sent to coordinator"),
                                             Err(_) => {
-                                                info!("CDC: Replication consumer stopping - channel closed");
+                                                info!(
+                                                    "CDC: Replication consumer stopping - channel closed"
+                                                );
                                                 return;
                                             }
                                         }
@@ -177,11 +180,12 @@ impl ReplicationConsumer {
                         if e.to_string().contains("connection")
                             || consecutive_errors >= MAX_CONSECUTIVE_ERRORS
                         {
-                            error!("Connection lost or max errors reached, stopping replication consumer");
+                            error!(
+                                "Connection lost or max errors reached, stopping replication consumer"
+                            );
                             let _ = tx
                                 .send(Err(MeiliBridgeError::Source(format!(
-                                    "Database connection lost after {} consecutive errors",
-                                    consecutive_errors
+                                    "Database connection lost after {consecutive_errors} consecutive errors",
                                 ))))
                                 .await;
                             return;

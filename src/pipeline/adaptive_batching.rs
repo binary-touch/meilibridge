@@ -57,7 +57,7 @@ struct MemoryMonitor {
 impl MemoryMonitor {
     fn new(threshold_percentage: f64) -> Self {
         let mut system = System::new_with_specifics(
-            RefreshKind::new().with_memory(MemoryRefreshKind::everything()),
+            RefreshKind::nothing().with_memory(MemoryRefreshKind::everything()),
         );
         system.refresh_memory();
 

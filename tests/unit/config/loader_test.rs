@@ -76,8 +76,12 @@ redis:
 
     #[test]
     fn test_environment_variable_substitution() {
-        std::env::set_var("TEST_DB_HOST", "env-host");
-        std::env::set_var("TEST_DB_PASS", "env-pass");
+        // SAFETY: This is a test function. We accept the risk of race conditions with environment variables
+        // in a test environment.
+        unsafe {
+            std::env::set_var("TEST_DB_HOST", "env-host");
+            std::env::set_var("TEST_DB_PASS", "env-pass");
+        }
 
         let yaml_with_env = r#"
 source:
@@ -92,8 +96,10 @@ source:
         // In actual implementation, env vars would be substituted
         assert!(config_path.exists());
 
-        std::env::remove_var("TEST_DB_HOST");
-        std::env::remove_var("TEST_DB_PASS");
+        unsafe {
+            std::env::remove_var("TEST_DB_HOST");
+            std::env::remove_var("TEST_DB_PASS");
+        }
     }
 
     #[test]

@@ -1,7 +1,7 @@
 //! Soft delete handling for the pipeline
 
 use crate::config::SoftDeleteConfig;
-use crate::models::{stream_event::Event, EventType};
+use crate::models::{EventType, stream_event::Event};
 use serde_json::Value;
 use tracing::{debug, trace};
 
@@ -31,20 +31,19 @@ impl SoftDeleteHandler {
                 }
 
                 // Check if the field value matches any delete value
-                if let Some(field_value) = cdc_event.data.get(&self.config.field) {
-                    if self.is_soft_deleted(field_value) {
-                        debug!(
-                            "Transforming UPDATE to DELETE for table '{}' due to soft delete field '{}' = {:?}",
-                            cdc_event.table, self.config.field, field_value
-                        );
+                if let Some(field_value) = cdc_event.data.get(&self.config.field)
+                    && self.is_soft_deleted(field_value)
+                {
+                    debug!(
+                        "Transforming UPDATE to DELETE for table '{}' due to soft delete field '{}' = {:?}",
+                        cdc_event.table, self.config.field, field_value
+                    );
 
-                        // Transform to a Delete event
-                        return Some(Event::Delete {
-                            table: cdc_event.table.clone(),
-                            old_data: Value::Object(cdc_event.data.clone().into_iter().collect()),
-                            position: cdc_event.position.clone(),
-                        });
-                    }
+                    // Transform to DELETE event
+                    let mut delete_event = cdc_event.clone();
+                    delete_event.event_type = crate::models::event::EventType::Delete;
+                    // For DELETE, we only need the primary key, but keeping data is fine
+                    return Some(Event::Cdc(delete_event));
                 }
 
                 Some(event)
@@ -61,20 +60,20 @@ impl SoftDeleteHandler {
                 }
 
                 // Check if the field value matches any delete value
-                if let Some(field_value) = new_data.get(&self.config.field) {
-                    if self.is_soft_deleted(field_value) {
-                        debug!(
-                            "Transforming UPDATE to DELETE for table '{}' due to soft delete field '{}' = {:?}",
-                            table, self.config.field, field_value
-                        );
+                if let Some(field_value) = new_data.get(&self.config.field)
+                    && self.is_soft_deleted(field_value)
+                {
+                    debug!(
+                        "Transforming UPDATE to DELETE for table '{}' due to soft delete field '{}' = {:?}",
+                        table, self.config.field, field_value
+                    );
 
-                        // Transform to a Delete event
-                        return Some(Event::Delete {
-                            table: table.clone(),
-                            old_data: old_data.clone(),
-                            position: position.clone(),
-                        });
-                    }
+                    // Transform to DELETE event
+                    return Some(Event::Delete {
+                        table: table.clone(),
+                        old_data: old_data.clone(),
+                        position: position.clone(),
+                    });
                 }
 
                 Some(event)
@@ -89,15 +88,14 @@ impl SoftDeleteHandler {
                 }
 
                 // Check if the field value matches any delete value
-                if let Some(field_value) = data.get(&self.config.field) {
-                    if self.is_soft_deleted(field_value) {
-                        trace!(
-                            "Filtering out soft-deleted record from full sync for table '{}': {} = {:?}",
-                            table, self.config.field, field_value
-                        );
-                        // Filter out soft-deleted records during full sync
-                        return None;
-                    }
+                if let Some(field_value) = data.get(&self.config.field)
+                    && self.is_soft_deleted(field_value)
+                {
+                    trace!(
+                        "Filtering out soft-deleted record from full sync for table '{}': {} = {:?}",
+                        table, self.config.field, field_value
+                    );
+                    return None;
                 }
 
                 Some(event)

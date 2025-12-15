@@ -7,11 +7,15 @@ use std::path::Path;
 pub struct ConfigLoader;
 
 impl ConfigLoader {
-    pub fn load() -> Result<Config> {
+    pub fn load(path: Option<&str>) -> Result<Config> {
         let mut builder = ConfigBuilder::builder();
 
         // Load from config file if specified
-        if let Ok(config_path) = env::var("CONFIG_PATH") {
+        let config_path = path
+            .map(String::from)
+            .or_else(|| env::var("CONFIG_PATH").ok());
+
+        if let Some(config_path) = config_path {
             builder = builder.add_source(File::with_name(&config_path));
         } else {
             // Try to load default config files
@@ -32,10 +36,10 @@ impl ConfigLoader {
         // Load environment-specific config
         if let Ok(env_name) = env::var("APP_ENV") {
             let env_configs = [
-                format!("config.{}.yaml", env_name),
-                format!("config.{}.yml", env_name),
-                format!("{}.yaml", env_name),
-                format!("{}.yml", env_name),
+                format!("config.{env_name}.yaml"),
+                format!("config.{env_name}.yml"),
+                format!("{env_name}.yaml"),
+                format!("{env_name}.yml"),
             ];
 
             for file in &env_configs {
@@ -57,11 +61,11 @@ impl ConfigLoader {
         // Build and deserialize
         let config = builder
             .build()
-            .map_err(|e| MeiliBridgeError::Config(format!("Failed to build config: {}", e)))?;
+            .map_err(|e| MeiliBridgeError::Config(format!("Failed to build config: {e}")))?;
 
-        let config: Config = config.try_deserialize().map_err(|e| {
-            MeiliBridgeError::Config(format!("Failed to deserialize config: {}", e))
-        })?;
+        let config: Config = config
+            .try_deserialize()
+            .map_err(|e| MeiliBridgeError::Config(format!("Failed to deserialize config: {e}")))?;
 
         // Validate configuration
         Self::validate(&config)?;
@@ -105,13 +109,13 @@ impl ConfigLoader {
 
         for (i, task) in config.sync_tasks.iter().enumerate() {
             if task.table.is_empty() {
-                errors.push(format!("Sync task {} has empty table name", i));
+                errors.push(format!("Sync task {i} has empty table name"));
             }
             if task.index.is_empty() {
-                errors.push(format!("Sync task {} has empty index name", i));
+                errors.push(format!("Sync task {i} has empty index name"));
             }
             if task.options.batch_size == 0 {
-                errors.push(format!("Sync task {} batch_size must be > 0", i));
+                errors.push(format!("Sync task {i} batch_size must be > 0"));
             }
         }
 
@@ -139,8 +143,7 @@ impl ConfigLoader {
 
     /// Load configuration from a specific file
     pub fn load_from_file(path: &str) -> Result<Config> {
-        env::set_var("CONFIG_PATH", path);
-        Self::load()
+        Self::load(Some(path))
     }
 
     /// Create a sample configuration file

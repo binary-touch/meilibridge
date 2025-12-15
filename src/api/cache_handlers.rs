@@ -1,6 +1,6 @@
 use crate::api::state::ApiState;
 use crate::error::MeiliBridgeError;
-use axum::{extract::State, Json};
+use axum::{Json, extract::State};
 use serde::Serialize;
 
 #[derive(Debug, Serialize)]

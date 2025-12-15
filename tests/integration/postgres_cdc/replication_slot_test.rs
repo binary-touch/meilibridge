@@ -3,7 +3,6 @@
 // These tests use binarytouch/postgres:17 image which has wal_level=logical configured.
 
 use crate::common::containers::*;
-use testcontainers::clients::Cli;
 
 #[cfg(test)]
 mod replication_slot_tests {
@@ -11,10 +10,9 @@ mod replication_slot_tests {
 
     #[tokio::test]
     async fn test_replication_slot_creation() {
-        let docker = Cli::default();
-        let postgres = start_postgres_with_cdc(&docker);
-        let port = postgres.get_host_port_ipv4(5432);
-        let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let postgres = start_postgres_with_cdc().await;
+        let port = postgres.get_host_port_ipv4(5432).await.unwrap();
+        let connection_string = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&connection_string).await.unwrap();
 
@@ -26,7 +24,7 @@ mod replication_slot_tests {
 
         tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -49,7 +47,7 @@ mod replication_slot_tests {
 
         tokio::spawn(async move {
             if let Err(e) = verify_connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -68,10 +66,9 @@ mod replication_slot_tests {
 
     #[tokio::test]
     async fn test_replication_slot_deletion() {
-        let docker = Cli::default();
-        let postgres = start_postgres_with_cdc(&docker);
-        let port = postgres.get_host_port_ipv4(5432);
-        let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let postgres = start_postgres_with_cdc().await;
+        let port = postgres.get_host_port_ipv4(5432).await.unwrap();
+        let connection_string = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&connection_string).await.unwrap();
 
@@ -83,7 +80,7 @@ mod replication_slot_tests {
 
         tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -104,7 +101,7 @@ mod replication_slot_tests {
 
         tokio::spawn(async move {
             if let Err(e) = drop_connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -127,10 +124,9 @@ mod replication_slot_tests {
 
     #[tokio::test]
     async fn test_slot_recovery_after_disconnect() {
-        let docker = Cli::default();
-        let postgres = start_postgres_with_cdc(&docker);
-        let port = postgres.get_host_port_ipv4(5432);
-        let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let postgres = start_postgres_with_cdc().await;
+        let port = postgres.get_host_port_ipv4(5432).await.unwrap();
+        let connection_string = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&connection_string).await.unwrap();
 
@@ -144,7 +140,7 @@ mod replication_slot_tests {
 
         let conn_handle = tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -168,7 +164,7 @@ mod replication_slot_tests {
 
         tokio::spawn(async move {
             if let Err(e) = verify_connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -187,10 +183,9 @@ mod replication_slot_tests {
 
     #[tokio::test]
     async fn test_multiple_slots() {
-        let docker = Cli::default();
-        let postgres = start_postgres_with_cdc(&docker);
-        let port = postgres.get_host_port_ipv4(5432);
-        let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let postgres = start_postgres_with_cdc().await;
+        let port = postgres.get_host_port_ipv4(5432).await.unwrap();
+        let connection_string = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&connection_string).await.unwrap();
 
@@ -204,7 +199,7 @@ mod replication_slot_tests {
 
         tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -226,7 +221,7 @@ mod replication_slot_tests {
 
         tokio::spawn(async move {
             if let Err(e) = verify_connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -251,10 +246,9 @@ mod replication_slot_tests {
 
     #[tokio::test]
     async fn test_slot_with_publication() {
-        let docker = Cli::default();
-        let postgres = start_postgres_with_cdc(&docker);
-        let port = postgres.get_host_port_ipv4(5432);
-        let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let postgres = start_postgres_with_cdc().await;
+        let port = postgres.get_host_port_ipv4(5432).await.unwrap();
+        let connection_string = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&connection_string).await.unwrap();
 
@@ -266,7 +260,7 @@ mod replication_slot_tests {
 
         tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -309,10 +303,9 @@ mod replication_slot_tests {
 
     #[tokio::test]
     async fn test_slot_cleanup_on_failure() {
-        let docker = Cli::default();
-        let postgres = start_postgres_with_cdc(&docker);
-        let port = postgres.get_host_port_ipv4(5432);
-        let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let postgres = start_postgres_with_cdc().await;
+        let port = postgres.get_host_port_ipv4(5432).await.unwrap();
+        let connection_string = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&connection_string).await.unwrap();
 
@@ -326,7 +319,7 @@ mod replication_slot_tests {
 
         tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -357,7 +350,7 @@ mod replication_slot_tests {
 
         tokio::spawn(async move {
             if let Err(e) = cleanup_connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 

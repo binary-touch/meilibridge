@@ -1,9 +1,9 @@
 use chrono::Utc;
-use meilibridge::config::{pipeline::FieldMapping, MappingConfig, TableMapping};
+use meilibridge::config::{MappingConfig, TableMapping, pipeline::FieldMapping};
 use meilibridge::models::stream_event::Event;
 use meilibridge::models::{CdcEvent, EventType, Position};
 use meilibridge::pipeline::mapper::FieldMapper;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 
 fn create_test_cdc_event(table: &str, data: HashMap<String, Value>) -> Event {

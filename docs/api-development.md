@@ -163,7 +163,7 @@ Health check endpoint.
 }
 ```
 
-#### GET /health/:component
+#### GET /health/{component}
 Get health status for a specific component.
 
 **Parameters**:
@@ -222,7 +222,7 @@ List all sync tasks.
 }
 ```
 
-#### GET /tasks/:id
+#### GET /tasks/{id}
 Get specific task details.
 
 **Response**:
@@ -299,18 +299,18 @@ Create a new sync task.
 }
 ```
 
-#### PUT /tasks/:id
+#### PUT /tasks/{id}
 Update task configuration.
 
 **Request Body**: Same as POST /tasks
 
-#### DELETE /tasks/:id
+#### DELETE /tasks/{id}
 Delete a sync task.
 
 **Query Parameters**:
 - `force`: Force delete even if task is active (default: false)
 
-#### POST /tasks/:id/pause
+#### POST /tasks/{id}/pause
 Pause a sync task.
 
 **Response**:
@@ -325,10 +325,10 @@ Pause a sync task.
 }
 ```
 
-#### POST /tasks/:id/resume
+#### POST /tasks/{id}/resume
 Resume a paused sync task.
 
-#### POST /tasks/:id/full-sync
+#### POST /tasks/{id}/full-sync
 Trigger a full synchronization for a task.
 
 **Request Body** (optional):
@@ -340,7 +340,7 @@ Trigger a full synchronization for a task.
 }
 ```
 
-#### GET /tasks/:id/stats
+#### GET /tasks/{id}/stats
 Get detailed statistics for a task.
 
 **Response**:
@@ -389,7 +389,7 @@ Get dead letter queue statistics.
 }
 ```
 
-#### POST /dead-letters/:task_id/reprocess
+#### POST /dead-letters/{task_id}/reprocess
 Reprocess dead letter entries for a task.
 
 **Request Body**:
@@ -442,7 +442,7 @@ Get CDC status and statistics.
 #### GET /sources
 List configured sources.
 
-#### GET /sources/:id
+#### GET /sources/{id}
 Get source details and status.
 
 #### POST /sources/test

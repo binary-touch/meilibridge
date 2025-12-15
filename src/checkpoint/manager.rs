@@ -3,8 +3,8 @@ use crate::error::{MeiliBridgeError, Result};
 use crate::models::{Checkpoint, Position};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::{mpsc, watch, RwLock};
-use tokio::time::{interval, Duration};
+use tokio::sync::{RwLock, mpsc, watch};
+use tokio::time::{Duration, interval};
 use tracing::{debug, error, info, warn};
 
 /// Commands for checkpoint management

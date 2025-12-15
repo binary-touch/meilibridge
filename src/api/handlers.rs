@@ -2,10 +2,10 @@ use crate::api::ApiState;
 use crate::config::SyncTaskConfig;
 use crate::error::MeiliBridgeError;
 use axum::{
+    Json,
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
-    Json,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -40,7 +40,7 @@ pub struct ErrorResponse {
 impl From<MeiliBridgeError> for ErrorResponse {
     fn from(err: MeiliBridgeError) -> Self {
         Self {
-            error: format!("{:?}", err),
+            error: format!("{err:?}"),
             message: err.to_string(),
         }
     }
@@ -120,8 +120,7 @@ pub async fn get_task(
         }))
     } else {
         Err(MeiliBridgeError::NotFound(format!(
-            "Task '{}' not found",
-            task_id
+            "Task '{task_id}' not found",
         )))
     }
 }
@@ -235,7 +234,7 @@ pub async fn reprocess_dead_letters(
 
     // Update metrics
     crate::metrics::DEAD_LETTER_REPROCESS_TOTAL
-        .with_label_values(&[&task_id, "initiated"])
+        .with_label_values(&[task_id.as_str(), "initiated"])
         .inc_by(count as f64);
 
     Ok(StatusCode::ACCEPTED)
@@ -298,7 +297,7 @@ pub async fn delete_task(
 /// Get Prometheus metrics
 pub async fn get_metrics() -> Result<String, MeiliBridgeError> {
     crate::metrics::export_metrics()
-        .map_err(|e| MeiliBridgeError::Pipeline(format!("Failed to export metrics: {}", e)))
+        .map_err(|e| MeiliBridgeError::Pipeline(format!("Failed to export metrics: {e}")))
 }
 
 /// Get health check for a specific component
@@ -311,8 +310,7 @@ pub async fn get_component_health(
             Ok((StatusCode::OK, Json(health)))
         } else {
             Err(MeiliBridgeError::NotFound(format!(
-                "Component '{}' not found",
-                component
+                "Component '{component}' not found",
             )))
         }
     } else {

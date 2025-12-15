@@ -54,7 +54,6 @@ impl FieldMapper {
                         if let Some(obj) = data.as_object() {
                             let data_map: HashMap<String, Value> =
                                 obj.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
-
                             let mapped = self.map_fields(data_map, field_mappings)?;
                             data = Value::Object(mapped.into_iter().collect());
                         }
@@ -148,7 +147,7 @@ impl FieldMapper {
                 let prefix = self.config.unmapped_fields_prefix.as_deref().unwrap_or("_");
                 for (k, v) in data {
                     if !mapped_sources.contains(&k) {
-                        result.insert(format!("{}{}", prefix, k), v);
+                        result.insert(format!("{prefix}{k}"), v);
                     }
                 }
             }

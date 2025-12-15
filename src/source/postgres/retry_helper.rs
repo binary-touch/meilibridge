@@ -1,5 +1,5 @@
-use crate::error::retry::{with_retry, RetryConfig, Retryable};
 use crate::error::MeiliBridgeError;
+use crate::error::retry::{RetryConfig, Retryable, with_retry};
 use deadpool_postgres::Pool;
 use tokio_postgres::Client;
 use tracing::debug;
@@ -114,8 +114,8 @@ enum PostgresRetryError {
 impl std::fmt::Display for PostgresRetryError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            PostgresRetryError::Postgres(e) => write!(f, "{}", e),
-            PostgresRetryError::Pool(msg) => write!(f, "Pool error: {}", msg),
+            PostgresRetryError::Postgres(e) => write!(f, "{e}"),
+            PostgresRetryError::Pool(msg) => write!(f, "Pool error: {msg}"),
         }
     }
 }

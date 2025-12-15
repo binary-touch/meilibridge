@@ -141,7 +141,7 @@ impl SourceAdapter for PostgresAdapter {
                 // Parse LSN
                 let pg_lsn: PgLsn = lsn
                     .parse()
-                    .map_err(|_| MeiliBridgeError::Source(format!("Invalid LSN: {}", lsn)))?;
+                    .map_err(|_| MeiliBridgeError::Source(format!("Invalid LSN: {lsn}")))?;
 
                 self.last_lsn = Some(pg_lsn);
                 debug!("Set start position to: {}", lsn);
@@ -159,7 +159,7 @@ impl SourceAdapter for PostgresAdapter {
                 // Parse LSN
                 let pg_lsn: PgLsn = lsn
                     .parse()
-                    .map_err(|_| MeiliBridgeError::Source(format!("Invalid LSN: {}", lsn)))?;
+                    .map_err(|_| MeiliBridgeError::Source(format!("Invalid LSN: {lsn}")))?;
 
                 self.last_lsn = Some(pg_lsn);
                 debug!("Acknowledged position: {}", lsn);

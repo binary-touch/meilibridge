@@ -1,5 +1,5 @@
 use meilibridge::pipeline::streaming_processor::{StreamingJsonProcessor, ZeroCopyEventRouter};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::io::Cursor;
 
 #[test]
@@ -62,9 +62,11 @@ fn test_estimate_value_size() {
     assert!(processor.parse_document(Cursor::new("42")).is_ok());
     assert!(processor.parse_document(Cursor::new(r#""hello""#)).is_ok());
     assert!(processor.parse_document(Cursor::new("[1,2,3]")).is_ok());
-    assert!(processor
-        .parse_document(Cursor::new(r#"{"key":"value"}"#))
-        .is_ok());
+    assert!(
+        processor
+            .parse_document(Cursor::new(r#"{"key":"value"}"#))
+            .is_ok()
+    );
 }
 
 #[tokio::test]
@@ -247,8 +249,10 @@ fn test_event_view_parse_full_invalid() {
 
     let result = event_view.parse_full();
     assert!(result.is_err());
-    assert!(result
-        .unwrap_err()
-        .to_string()
-        .contains("Failed to parse event"));
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("Failed to parse event")
+    );
 }

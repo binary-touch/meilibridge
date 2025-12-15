@@ -1,5 +1,5 @@
 use crate::error::{MeiliBridgeError, Result};
-use crate::models::{stream_event::Event, CdcEvent, EventType};
+use crate::models::{CdcEvent, EventType, stream_event::Event};
 use serde_json::Value;
 use tracing::{debug, warn};
 
@@ -59,8 +59,7 @@ impl BatchProcessor {
                         }
                     } else {
                         return Err(MeiliBridgeError::Meilisearch(format!(
-                            "Missing primary key field '{}' in delete event",
-                            pk_field
+                            "Missing primary key field '{pk_field}' in delete event",
                         )));
                     }
                 } else {

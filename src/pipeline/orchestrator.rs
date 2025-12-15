@@ -8,14 +8,14 @@ use crate::metrics;
 use crate::models::event::{
     Event as ModelsEvent, EventData as ModelsEventData, EventType as ModelsEventType,
 };
-use crate::models::{stream_event::Event, Position};
 use crate::models::{EventId, EventMetadata, EventSource};
-use crate::pipeline::{
-    filter::EventFilter, mapper::FieldMapper, soft_delete::SoftDeleteHandler,
-    transformer::EventTransformer, BackpressureConfig, BackpressureEvent, BackpressureManager,
-    CdcCoordinator, ParallelTableProcessor, WorkStealingCoordinator,
-};
+use crate::models::{Position, stream_event::Event};
 use crate::pipeline::{AdaptiveBatchingManager, MemoryMonitor};
+use crate::pipeline::{
+    BackpressureConfig, BackpressureEvent, BackpressureManager, CdcCoordinator,
+    ParallelTableProcessor, WorkStealingCoordinator, filter::EventFilter, mapper::FieldMapper,
+    soft_delete::SoftDeleteHandler, transformer::EventTransformer,
+};
 use crate::source::adapter::SourceAdapter;
 use crate::source::postgres::PostgresAdapter;
 use chrono::Utc;
@@ -23,8 +23,8 @@ use futures::StreamExt;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::{mpsc, watch, RwLock};
-use tokio::time::{interval, Duration};
+use tokio::sync::{RwLock, mpsc, watch};
+use tokio::time::{Duration, interval};
 use tracing::{debug, error, info, trace, warn};
 
 /// Parameters for batch processing with at-least-once delivery
@@ -581,7 +581,7 @@ impl PipelineOrchestrator {
                                     if let Err(e) = checkpoint_manager
                                         .cleanup_checkpoints(
                                             active_task_ids.clone(),
-                                            checkpoint_retention_config.max_checkpoints_per_task,
+                                            100, // Max checkpoints per task
                                         )
                                         .await
                                     {
@@ -639,8 +639,7 @@ impl PipelineOrchestrator {
             // Get the source adapter
             let source_adapter = self.source_adapters.get_mut(&source_name).ok_or_else(|| {
                 MeiliBridgeError::Pipeline(format!(
-                    "Source adapter '{}' not found for sync tasks",
-                    source_name
+                    "Source adapter '{source_name}' not found for sync tasks",
                 ))
             })?;
 
@@ -1707,7 +1706,7 @@ impl PipelineOrchestrator {
                         .at_least_once_manager
                         .rollback(&transaction_id)
                         .await?;
-                    return Err(MeiliBridgeError::Pipeline(format!("Send failed: {}", e)));
+                    return Err(MeiliBridgeError::Pipeline(format!("Send failed: {e}")));
                 }
             }
         }
@@ -1828,7 +1827,7 @@ impl PipelineOrchestrator {
             None => {
                 return Err(MeiliBridgeError::Pipeline(
                     "No response from destination".to_string(),
-                ))
+                ));
             }
         }
 
@@ -2068,7 +2067,7 @@ impl PipelineOrchestrator {
             .sync_tasks
             .iter()
             .find(|t| t.id == task_id)
-            .ok_or_else(|| MeiliBridgeError::NotFound(format!("Task '{}' not found", task_id)))?
+            .ok_or_else(|| MeiliBridgeError::NotFound(format!("Task '{task_id}' not found")))?
             .clone();
 
         info!("Triggering full sync for task '{}'", task_id);

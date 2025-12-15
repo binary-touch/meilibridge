@@ -2,7 +2,7 @@
 
 use crate::common::fixtures::*;
 use crate::common::setup_postgres_cdc;
-use testcontainers::clients::Cli;
+use testcontainers::runners::AsyncRunner;
 use testcontainers_modules::postgres::Postgres;
 
 #[cfg(test)]
@@ -40,13 +40,13 @@ mod connection_tests {
 
                 tokio::spawn(async move {
                     if let Err(e) = connection.await {
-                        eprintln!("connection error: {}", e);
+                        eprintln!("connection error: {e}");
                     }
                 });
 
                 // Execute a query to ensure connection works
                 let row = client
-                    .query_one(&format!("SELECT {} as num", i), &[])
+                    .query_one(&format!("SELECT {i} as num"), &[])
                     .await
                     .unwrap();
                 let num: i32 = row.get("num");
@@ -64,17 +64,16 @@ mod connection_tests {
     #[tokio::test]
     async fn test_connection_with_invalid_credentials() {
         use crate::common::containers::{start_postgres_with_cdc, wait_for_postgres};
-        use crate::common::DOCKER;
-        let postgres = start_postgres_with_cdc(&DOCKER);
-        let port = postgres.get_host_port_ipv4(5432);
+
+        let postgres = start_postgres_with_cdc().await;
+        let port = postgres.get_host_port_ipv4(5432).await.unwrap();
 
         // Wait for PostgreSQL to be ready
-        let valid_connection = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let valid_connection = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
         wait_for_postgres(&valid_connection).await.unwrap();
 
         // Try with invalid password
-        let invalid_connection =
-            format!("postgresql://postgres:wrongpass@localhost:{}/testdb", port);
+        let invalid_connection = format!("postgresql://postgres:wrongpass@localhost:{port}/testdb");
         let result = tokio_postgres::connect(&invalid_connection, tokio_postgres::NoTls).await;
 
         assert!(result.is_err());
@@ -98,10 +97,13 @@ mod connection_tests {
 
     #[tokio::test]
     async fn test_ssl_connection_modes() {
-        let docker = Cli::default();
-        let postgres = docker.run(Postgres::default().with_db_name("testdb"));
-        let port = postgres.get_host_port_ipv4(5432);
-        let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let postgres = Postgres::default()
+            .with_db_name("testdb")
+            .start()
+            .await
+            .unwrap();
+        let port = postgres.get_host_port_ipv4(5432).await.unwrap();
+        let connection_string = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&connection_string).await.unwrap();
 
@@ -114,17 +116,19 @@ mod connection_tests {
 
     #[tokio::test]
     async fn test_connection_parameter_validation() {
-        let docker = Cli::default();
-        let postgres = docker.run(Postgres::default().with_db_name("testdb"));
-        let port = postgres.get_host_port_ipv4(5432);
+        let postgres = Postgres::default()
+            .with_db_name("testdb")
+            .start()
+            .await
+            .unwrap();
+        let port = postgres.get_host_port_ipv4(5432).await.unwrap();
 
         // Test various connection string formats
         let connection_strings = vec![
-            format!("postgresql://postgres:postgres@localhost:{}/testdb", port),
-            format!("postgres://postgres:postgres@localhost:{}/testdb", port),
+            format!("postgresql://postgres:postgres@localhost:{port}/testdb"),
+            format!("postgres://postgres:postgres@localhost:{port}/testdb"),
             format!(
-                "postgresql://postgres:postgres@localhost:{}/testdb?application_name=meilibridge",
-                port
+                "postgresql://postgres:postgres@localhost:{port}/testdb?application_name=meilibridge",
             ),
         ];
 
@@ -132,16 +136,19 @@ mod connection_tests {
             wait_for_postgres(&conn_str).await.unwrap();
 
             let result = tokio_postgres::connect(&conn_str, tokio_postgres::NoTls).await;
-            assert!(result.is_ok(), "Failed to connect with: {}", conn_str);
+            assert!(result.is_ok(), "Failed to connect with: {conn_str}");
         }
     }
 
     #[tokio::test]
     async fn test_reconnection_after_disconnect() {
-        let docker = Cli::default();
-        let postgres = docker.run(Postgres::default().with_db_name("testdb"));
-        let port = postgres.get_host_port_ipv4(5432);
-        let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let postgres = Postgres::default()
+            .with_db_name("testdb")
+            .start()
+            .await
+            .unwrap();
+        let port = postgres.get_host_port_ipv4(5432).await.unwrap();
+        let connection_string = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&connection_string).await.unwrap();
 
@@ -153,7 +160,7 @@ mod connection_tests {
 
         let conn_handle = tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -172,7 +179,7 @@ mod connection_tests {
 
         tokio::spawn(async move {
             if let Err(e) = new_connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -184,12 +191,15 @@ mod connection_tests {
 
     #[tokio::test]
     async fn test_connection_with_different_databases() {
-        let docker = Cli::default();
-        let postgres = docker.run(Postgres::default().with_db_name("testdb"));
-        let port = postgres.get_host_port_ipv4(5432);
+        let postgres = Postgres::default()
+            .with_db_name("testdb")
+            .start()
+            .await
+            .unwrap();
+        let port = postgres.get_host_port_ipv4(5432).await.unwrap();
 
         // Connect to default database first
-        let postgres_db = format!("postgresql://postgres:postgres@localhost:{}/postgres", port);
+        let postgres_db = format!("postgresql://postgres:postgres@localhost:{port}/postgres");
         wait_for_postgres(&postgres_db).await.unwrap();
 
         let (client, connection) = tokio_postgres::connect(&postgres_db, tokio_postgres::NoTls)
@@ -198,7 +208,7 @@ mod connection_tests {
 
         tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -209,17 +219,14 @@ mod connection_tests {
             .ok();
 
         // Connect to the new database
-        let new_db = format!(
-            "postgresql://postgres:postgres@localhost:{}/meilibridge_test",
-            port
-        );
+        let new_db = format!("postgresql://postgres:postgres@localhost:{port}/meilibridge_test",);
         let (new_client, new_connection) = tokio_postgres::connect(&new_db, tokio_postgres::NoTls)
             .await
             .unwrap();
 
         tokio::spawn(async move {
             if let Err(e) = new_connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 

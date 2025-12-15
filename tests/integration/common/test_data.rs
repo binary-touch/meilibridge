@@ -2,7 +2,7 @@
 
 use chrono::Utc;
 use meilibridge::models::progress::{Checkpoint, Position, ProgressStats};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -121,15 +121,14 @@ pub mod sql {
         client
             .execute(
                 &format!(
-                    "CREATE TABLE IF NOT EXISTS {} (
+                    "CREATE TABLE IF NOT EXISTS {table_name} (
                         id SERIAL PRIMARY KEY,
                         name TEXT NOT NULL,
                         email TEXT,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         deleted_at TIMESTAMP
-                    )",
-                    table_name
+                    )"
                 ),
                 &[],
             )

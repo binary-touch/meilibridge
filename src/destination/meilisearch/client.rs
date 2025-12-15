@@ -37,8 +37,7 @@ impl MeilisearchClient {
                 Ok(())
             }
             Err(e) => Err(MeiliBridgeError::Meilisearch(format!(
-                "Failed to connect to Meilisearch: {}",
-                e
+                "Failed to connect to Meilisearch: {e}",
             ))),
         }
     }
@@ -54,5 +53,5 @@ impl MeilisearchClient {
 
 /// Convert Meilisearch SDK errors to our error type
 pub fn convert_error(error: MeilisearchError) -> MeiliBridgeError {
-    MeiliBridgeError::Meilisearch(format!("{:?}", error))
+    MeiliBridgeError::Meilisearch(format!("{error:?}"))
 }

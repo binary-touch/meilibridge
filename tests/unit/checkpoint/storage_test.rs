@@ -87,7 +87,7 @@ mod checkpoint_storage_tests {
 
         // Save multiple checkpoints
         for i in 1..=5 {
-            let checkpoint = create_test_checkpoint(&format!("task{}", i));
+            let checkpoint = create_test_checkpoint(&format!("task{i}"));
             storage.save(&checkpoint).await.unwrap();
         }
 
@@ -98,7 +98,7 @@ mod checkpoint_storage_tests {
         // Verify all task IDs
         let task_ids: Vec<String> = checkpoints.iter().map(|c| c.task_id.clone()).collect();
         for i in 1..=5 {
-            assert!(task_ids.contains(&format!("task{}", i)));
+            assert!(task_ids.contains(&format!("task{i}")));
         }
     }
 
@@ -113,7 +113,7 @@ mod checkpoint_storage_tests {
         for i in 0..10 {
             let storage_clone = storage.clone();
             let handle = tokio::spawn(async move {
-                let checkpoint = create_test_checkpoint(&format!("task{}", i));
+                let checkpoint = create_test_checkpoint(&format!("task{i}"));
                 storage_clone.save(&checkpoint).await.unwrap();
             });
             handles.push(handle);
@@ -132,7 +132,7 @@ mod checkpoint_storage_tests {
         for i in 0..10 {
             let storage_clone = storage.clone();
             let handle = tokio::spawn(async move {
-                let loaded = storage_clone.load(&format!("task{}", i)).await.unwrap();
+                let loaded = storage_clone.load(&format!("task{i}")).await.unwrap();
                 assert!(loaded.is_some());
             });
             handles.push(handle);
@@ -220,7 +220,7 @@ mod checkpoint_storage_tests {
 
         // Store many checkpoints
         for i in 0..1000 {
-            let checkpoint = create_test_checkpoint(&format!("bulk_task_{}", i));
+            let checkpoint = create_test_checkpoint(&format!("bulk_task_{i}"));
             storage.save(&checkpoint).await.unwrap();
         }
 
@@ -231,7 +231,7 @@ mod checkpoint_storage_tests {
         // Random access should still be fast
         let start = std::time::Instant::now();
         for i in (0..1000).step_by(100) {
-            storage.load(&format!("bulk_task_{}", i)).await.unwrap();
+            storage.load(&format!("bulk_task_{i}")).await.unwrap();
         }
         let duration = start.elapsed();
         assert!(duration.as_millis() < 100); // Should be very fast

@@ -1,7 +1,6 @@
 // PostgreSQL WAL consumer integration tests
 
 use crate::common::containers::*;
-use testcontainers::clients::Cli;
 
 #[cfg(test)]
 mod wal_consumer_tests {
@@ -9,10 +8,9 @@ mod wal_consumer_tests {
 
     #[tokio::test]
     async fn test_real_time_change_capture() {
-        let docker = Cli::default();
-        let postgres = start_postgres_with_cdc(&docker);
-        let port = postgres.get_host_port_ipv4(5432);
-        let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let postgres = start_postgres_with_cdc().await;
+        let port = postgres.get_host_port_ipv4(5432).await.unwrap();
+        let connection_string = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&connection_string).await.unwrap();
 
@@ -24,7 +22,7 @@ mod wal_consumer_tests {
 
         tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -90,10 +88,9 @@ mod wal_consumer_tests {
 
     #[tokio::test]
     async fn test_message_ordering() {
-        let docker = Cli::default();
-        let postgres = start_postgres_with_cdc(&docker);
-        let port = postgres.get_host_port_ipv4(5432);
-        let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let postgres = start_postgres_with_cdc().await;
+        let port = postgres.get_host_port_ipv4(5432).await.unwrap();
+        let connection_string = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&connection_string).await.unwrap();
 
@@ -104,7 +101,7 @@ mod wal_consumer_tests {
 
         tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -152,10 +149,9 @@ mod wal_consumer_tests {
 
     #[tokio::test]
     async fn test_transaction_consistency() {
-        let docker = Cli::default();
-        let postgres = start_postgres_with_cdc(&docker);
-        let port = postgres.get_host_port_ipv4(5432);
-        let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let postgres = start_postgres_with_cdc().await;
+        let port = postgres.get_host_port_ipv4(5432).await.unwrap();
+        let connection_string = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&connection_string).await.unwrap();
 
@@ -166,7 +162,7 @@ mod wal_consumer_tests {
 
         tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -259,10 +255,9 @@ mod wal_consumer_tests {
 
     #[tokio::test]
     async fn test_large_transaction_handling() {
-        let docker = Cli::default();
-        let postgres = start_postgres_with_cdc(&docker);
-        let port = postgres.get_host_port_ipv4(5432);
-        let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let postgres = start_postgres_with_cdc().await;
+        let port = postgres.get_host_port_ipv4(5432).await.unwrap();
+        let connection_string = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&connection_string).await.unwrap();
 
@@ -273,7 +268,7 @@ mod wal_consumer_tests {
 
         tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -305,7 +300,7 @@ mod wal_consumer_tests {
             transaction
                 .execute(
                     "INSERT INTO test_large_txn (data) VALUES ($1)",
-                    &[&format!("Record {}", i)],
+                    &[&format!("Record {i}")],
                 )
                 .await
                 .unwrap();
@@ -325,10 +320,9 @@ mod wal_consumer_tests {
 
     #[tokio::test]
     async fn test_schema_change_handling() {
-        let docker = Cli::default();
-        let postgres = start_postgres_with_cdc(&docker);
-        let port = postgres.get_host_port_ipv4(5432);
-        let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let postgres = start_postgres_with_cdc().await;
+        let port = postgres.get_host_port_ipv4(5432).await.unwrap();
+        let connection_string = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&connection_string).await.unwrap();
 
@@ -339,7 +333,7 @@ mod wal_consumer_tests {
 
         tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 
@@ -403,10 +397,9 @@ mod wal_consumer_tests {
 
     #[tokio::test]
     async fn test_multi_table_changes() {
-        let docker = Cli::default();
-        let postgres = start_postgres_with_cdc(&docker);
-        let port = postgres.get_host_port_ipv4(5432);
-        let connection_string = format!("postgresql://postgres:postgres@localhost:{}/testdb", port);
+        let postgres = start_postgres_with_cdc().await;
+        let port = postgres.get_host_port_ipv4(5432).await.unwrap();
+        let connection_string = format!("postgresql://postgres:postgres@localhost:{port}/testdb");
 
         wait_for_postgres(&connection_string).await.unwrap();
 
@@ -417,7 +410,7 @@ mod wal_consumer_tests {
 
         tokio::spawn(async move {
             if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
+                eprintln!("connection error: {e}");
             }
         });
 

@@ -94,20 +94,19 @@ impl RedisStorage {
     }
 
     pub async fn connect(&mut self) -> Result<()> {
-        let client = redis::Client::open(self.config.url.as_str()).map_err(|e| {
-            MeiliBridgeError::Config(format!("Failed to create Redis client: {}", e))
-        })?;
+        let client = redis::Client::open(self.config.url.as_str())
+            .map_err(|e| MeiliBridgeError::Config(format!("Failed to create Redis client: {e}")))?;
 
         // Test connection
         let mut con = client
-            .get_async_connection()
+            .get_multiplexed_async_connection()
             .await
-            .map_err(|e| MeiliBridgeError::Config(format!("Failed to connect to Redis: {}", e)))?;
+            .map_err(|e| MeiliBridgeError::Config(format!("Failed to connect to Redis: {e}")))?;
 
         redis::cmd("PING")
-            .query_async::<_, String>(&mut con)
+            .query_async::<String>(&mut con)
             .await
-            .map_err(|e| MeiliBridgeError::Config(format!("Redis ping failed: {}", e)))?;
+            .map_err(|e| MeiliBridgeError::Config(format!("Redis ping failed: {e}")))?;
 
         self.client = Some(client);
         info!("Connected to Redis for checkpoint storage");
@@ -118,16 +117,16 @@ impl RedisStorage {
         format!("{}{}", self.key_prefix, task_id)
     }
 
-    async fn get_connection(&self) -> Result<redis::aio::Connection> {
+    async fn get_connection(&self) -> Result<redis::aio::MultiplexedConnection> {
         let client = self
             .client
             .as_ref()
             .ok_or_else(|| MeiliBridgeError::Config("Redis client not initialized".to_string()))?;
 
         client
-            .get_async_connection()
+            .get_multiplexed_async_connection()
             .await
-            .map_err(|e| MeiliBridgeError::Config(format!("Failed to get Redis connection: {}", e)))
+            .map_err(|e| MeiliBridgeError::Config(format!("Failed to get Redis connection: {e}")))
     }
 }
 
@@ -147,9 +146,9 @@ impl CheckpointStorage for RedisStorage {
             .arg(&value)
             .arg("EX")
             .arg(ttl)
-            .query_async::<_, ()>(&mut con)
+            .query_async::<()>(&mut con)
             .await
-            .map_err(|e| MeiliBridgeError::Config(format!("Failed to save checkpoint: {}", e)))?;
+            .map_err(|e| MeiliBridgeError::Config(format!("Failed to save checkpoint: {e}")))?;
 
         debug!(
             "Saved checkpoint for task '{}' to Redis",
@@ -166,7 +165,7 @@ impl CheckpointStorage for RedisStorage {
             .arg(&key)
             .query_async(&mut con)
             .await
-            .map_err(|e| MeiliBridgeError::Config(format!("Failed to load checkpoint: {}", e)))?;
+            .map_err(|e| MeiliBridgeError::Config(format!("Failed to load checkpoint: {e}")))?;
 
         match value {
             Some(json) => {
@@ -183,9 +182,9 @@ impl CheckpointStorage for RedisStorage {
 
         redis::cmd("DEL")
             .arg(&key)
-            .query_async::<_, ()>(&mut con)
+            .query_async::<()>(&mut con)
             .await
-            .map_err(|e| MeiliBridgeError::Config(format!("Failed to delete checkpoint: {}", e)))?;
+            .map_err(|e| MeiliBridgeError::Config(format!("Failed to delete checkpoint: {e}")))?;
 
         debug!("Deleted checkpoint for task '{}' from Redis", task_id);
         Ok(())
@@ -200,7 +199,7 @@ impl CheckpointStorage for RedisStorage {
             .arg(&pattern)
             .query_async(&mut con)
             .await
-            .map_err(|e| MeiliBridgeError::Config(format!("Failed to list checkpoints: {}", e)))?;
+            .map_err(|e| MeiliBridgeError::Config(format!("Failed to list checkpoints: {e}")))?;
 
         let mut checkpoints = Vec::new();
 
@@ -210,9 +209,7 @@ impl CheckpointStorage for RedisStorage {
                 .arg(&key)
                 .query_async(&mut con)
                 .await
-                .map_err(|e| {
-                    MeiliBridgeError::Config(format!("Failed to load checkpoint: {}", e))
-                })?;
+                .map_err(|e| MeiliBridgeError::Config(format!("Failed to load checkpoint: {e}")))?;
 
             if let Some(json) = value {
                 match serde_json::from_str::<Checkpoint>(&json) {
@@ -228,7 +225,7 @@ impl CheckpointStorage for RedisStorage {
     async fn is_healthy(&self) -> bool {
         if let Ok(mut con) = self.get_connection().await {
             redis::cmd("PING")
-                .query_async::<_, String>(&mut con)
+                .query_async::<String>(&mut con)
                 .await
                 .is_ok()
         } else {

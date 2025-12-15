@@ -1,5 +1,5 @@
 use crate::error::Result;
-use crate::models::{stream_event::Event, CdcEvent, EventType};
+use crate::models::{CdcEvent, EventType, stream_event::Event};
 use crate::source::postgres::pgoutput::{PgOutputMessage, PgOutputParser};
 use chrono::Utc;
 use futures::Stream;
@@ -57,8 +57,7 @@ impl WalConsumer {
             loop {
                 // Poll for changes using pg_logical_slot_peek_changes
                 let query = format!(
-                    "SELECT lsn, xid, data FROM pg_logical_slot_peek_changes('{}', NULL, NULL, 'proto_version', '1', 'publication_names', '{}')",
-                    slot_name, publication_name
+                    "SELECT lsn, xid, data FROM pg_logical_slot_peek_changes('{slot_name}', NULL, NULL, 'proto_version', '1', 'publication_names', '{publication_name}')",
                 );
 
                 match client.query(&query, &[]).await {
@@ -73,11 +72,10 @@ impl WalConsumer {
 
                                 // Parse the logical decoding message
                                 if let Some(event) = parse_logical_decoding_message(&data, &parser)
+                                    && tx.send(Ok(event)).await.is_err()
                                 {
-                                    if tx.send(Ok(event)).await.is_err() {
-                                        info!("WAL consumer stopping - channel closed");
-                                        return;
-                                    }
+                                    info!("WAL consumer stopping - channel closed");
+                                    return;
                                 }
 
                                 last_lsn = lsn;
@@ -85,8 +83,7 @@ impl WalConsumer {
 
                             // Advance the replication slot
                             let advance_query = format!(
-                                "SELECT pg_replication_slot_advance('{}', '{}')",
-                                slot_name, last_lsn
+                                "SELECT pg_replication_slot_advance('{slot_name}', '{last_lsn}')",
                             );
 
                             if let Err(e) = client.execute(&advance_query, &[]).await {

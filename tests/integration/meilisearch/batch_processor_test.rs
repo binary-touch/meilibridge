@@ -219,7 +219,7 @@ mod batch_processor_tests {
         }
 
         let elapsed = start.elapsed();
-        println!("Processed 1000 documents in {:?}", elapsed);
+        println!("Processed 1000 documents in {elapsed:?}");
 
         // Verify all documents were added
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;

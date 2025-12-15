@@ -4,8 +4,8 @@ use crate::models::Position;
 use crate::pipeline::PipelineOrchestrator;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::{mpsc, watch, RwLock};
-use tokio::time::{interval, Duration};
+use tokio::sync::{RwLock, mpsc, watch};
+use tokio::time::{Duration, interval};
 use tracing::{debug, error, info, warn};
 
 /// Status of a sync task
@@ -269,12 +269,12 @@ impl SyncTaskManager {
         info!("Pausing task '{}'", task_id);
 
         let mut statuses_map = statuses.write().await;
-        if let Some(status) = statuses_map.get_mut(task_id) {
-            if status.state == TaskState::Running {
-                status.state = TaskState::Paused;
-                status.last_updated = chrono::Utc::now();
-                info!("Task '{}' state changed to Paused", task_id);
-            }
+        if let Some(status) = statuses_map.get_mut(task_id)
+            && status.state == TaskState::Running
+        {
+            status.state = TaskState::Paused;
+            status.last_updated = chrono::Utc::now();
+            info!("Task '{}' state changed to Paused", task_id);
         }
     }
 
@@ -283,12 +283,12 @@ impl SyncTaskManager {
         info!("Resuming task '{}'", task_id);
 
         let mut statuses_map = statuses.write().await;
-        if let Some(status) = statuses_map.get_mut(task_id) {
-            if status.state == TaskState::Paused {
-                status.state = TaskState::Running;
-                status.last_updated = chrono::Utc::now();
-                info!("Task '{}' state changed to Running", task_id);
-            }
+        if let Some(status) = statuses_map.get_mut(task_id)
+            && status.state == TaskState::Paused
+        {
+            status.state = TaskState::Running;
+            status.last_updated = chrono::Utc::now();
+            info!("Task '{}' state changed to Running", task_id);
         }
     }
 
@@ -382,8 +382,7 @@ impl SyncTaskManager {
             Ok(())
         } else {
             Err(MeiliBridgeError::Pipeline(format!(
-                "Task '{}' not found",
-                task_id
+                "Task '{task_id}' not found",
             )))
         }
     }
@@ -408,8 +407,7 @@ impl SyncTaskManager {
             Ok(())
         } else {
             Err(MeiliBridgeError::Pipeline(format!(
-                "Task '{}' not found",
-                task_id
+                "Task '{task_id}' not found",
             )))
         }
     }

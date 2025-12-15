@@ -1,5 +1,5 @@
 use crate::error::Result;
-use crate::models::{stream_event::Event, Position};
+use crate::models::{Position, stream_event::Event};
 use async_trait::async_trait;
 use serde_json::Value;
 use std::collections::HashMap;

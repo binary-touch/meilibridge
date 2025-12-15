@@ -1,4 +1,4 @@
-use crate::config::{Condition, Config, FieldMapping, FieldTransform, SyncTaskConfig};
+use crate::config::{Condition, Config, FieldMapping, SyncTaskConfig};
 use crate::error::Result;
 use crate::source::postgres::connection::PostgresConnector;
 use crate::source::postgres::full_sync::FullSyncHandler;
@@ -136,13 +136,13 @@ impl ConfigValidator {
         }
 
         // Validate event types
-        if let Some(event_types) = &filter.event_types {
-            if event_types.is_empty() {
-                report.add_warning(format!(
-                    "Empty event_types filter for table '{}' will filter out all events",
-                    task.table
-                ));
-            }
+        if let Some(event_types) = &filter.event_types
+            && event_types.is_empty()
+        {
+            report.add_warning(format!(
+                "Empty event_types filter for table '{}' will filter out all events",
+                task.table
+            ));
         }
 
         Ok(())
@@ -299,7 +299,7 @@ impl ConfigValidator {
         // Create a connector to query schema
         let mut connector = PostgresConnector::new((**pg_config).clone());
         if let Err(e) = connector.connect().await {
-            report.add_warning(format!("Cannot validate fields against schema: {}", e));
+            report.add_warning(format!("Cannot validate fields against schema: {e}"));
             return Ok(());
         }
 
@@ -323,13 +323,19 @@ impl ConfigValidator {
                                 );
                             }
 
-                            // Check if all referenced fields exist
-                            for field in referenced_fields {
-                                if !column_set.contains(&field) {
-                                    report.add_error(format!(
-                                        "Table '{}': Filter references non-existent field '{}'",
-                                        task.table, field
-                                    ));
+                            // Check if referenced fields exist in mapping
+                            if let Some(mapping) = &task.mapping {
+                                if let Some(tables) = &mapping.tables.get(&task.table) {
+                                    if let Some(fields) = &tables.fields {
+                                        for field in referenced_fields {
+                                            if !fields.contains_key(&field) {
+                                                report.add_warning(format!(
+                                                    "Table '{}': Filter condition references field '{}' which is not in the mapping",
+                                                    task.table, field
+                                                ));
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -372,37 +378,37 @@ impl ConfigValidator {
                     if let Some(transform) = &task.transform {
                         if let Some(table_transforms) = transform.fields.get(&task.table) {
                             for field_transform in table_transforms.values() {
-                                match field_transform {
-                                    FieldTransform::Rename { from, .. } => {
-                                        if !column_set.contains(from) {
-                                            report.add_error(format!(
-                                                "Table '{}': Transform references non-existent field '{}'",
-                                                task.table, from
-                                            ));
-                                        }
+                                if let crate::config::pipeline::FieldTransform::Extract {
+                                    from,
+                                    path,
+                                    ..
+                                } = field_transform
+                                {
+                                    if !column_set.contains(from) {
+                                        report.add_error(format!(
+                                            "Table '{}': Transform extracts from non-existent field '{}'",
+                                            task.table, from
+                                        ));
                                     }
-                                    FieldTransform::Convert { field, .. } => {
-                                        if !column_set.contains(field) {
-                                            report.add_error(format!(
-                                                "Table '{}': Transform references non-existent field '{}'",
-                                                task.table, field
-                                            ));
-                                        }
+                                    if path.is_empty() {
+                                        report.add_error(format!(
+                                            "Table '{}': Transform has empty extraction path",
+                                            task.table
+                                        ));
                                     }
-                                    _ => {} // Other transforms don't reference fields
                                 }
                             }
                         }
                     }
 
                     // Validate soft delete field
-                    if let Some(soft_delete) = &task.soft_delete {
-                        if !column_set.contains(&soft_delete.field) {
-                            report.add_error(format!(
-                                "Table '{}': Soft delete references non-existent field '{}'",
-                                task.table, soft_delete.field
-                            ));
-                        }
+                    if let Some(soft_delete) = &task.soft_delete
+                        && !column_set.contains(&soft_delete.field)
+                    {
+                        report.add_error(format!(
+                            "Table '{}': Soft delete references non-existent field '{}'",
+                            task.table, soft_delete.field
+                        ));
                     }
 
                     report.add_info(format!(

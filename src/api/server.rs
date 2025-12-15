@@ -1,10 +1,9 @@
-use crate::api::{cache_handlers, diagnostics, handlers, middleware, ApiState};
+use crate::api::{ApiState, cache_handlers, diagnostics, handlers, middleware};
 use crate::config::Config;
 use crate::error::{MeiliBridgeError, Result};
 use axum::{
-    middleware as axum_middleware,
+    Router, middleware as axum_middleware,
     routing::{delete, get, post, put},
-    Router,
 };
 use std::net::SocketAddr;
 use tower_http::cors::CorsLayer;
@@ -27,15 +26,15 @@ impl ApiServer {
         Router::new()
             // Health check
             .route("/health", get(handlers::health))
-            .route("/health/:component", get(handlers::get_component_health))
+            .route("/health/{component}", get(handlers::get_component_health))
             // Task management
             .route("/tasks", get(handlers::get_tasks))
             .route("/tasks", post(handlers::create_task))
-            .route("/tasks/:id", get(handlers::get_task))
-            .route("/tasks/:id", delete(handlers::delete_task))
-            .route("/tasks/:id/pause", put(handlers::pause_task))
-            .route("/tasks/:id/resume", put(handlers::resume_task))
-            .route("/tasks/:id/full-sync", post(handlers::full_sync_task))
+            .route("/tasks/{id}", get(handlers::get_task))
+            .route("/tasks/{id}", delete(handlers::delete_task))
+            .route("/tasks/{id}/pause", put(handlers::pause_task))
+            .route("/tasks/{id}/resume", put(handlers::resume_task))
+            .route("/tasks/{id}/full-sync", post(handlers::full_sync_task))
             // CDC control
             .route("/cdc/pause", put(handlers::pause_cdc))
             .route("/cdc/resume", put(handlers::resume_cdc))
@@ -46,7 +45,7 @@ impl ApiServer {
             // Dead letter queue
             .route("/dead-letters", get(handlers::get_dead_letter_stats))
             .route(
-                "/dead-letters/:task_id/reprocess",
+                "/dead-letters/{task_id}/reprocess",
                 post(handlers::reprocess_dead_letters),
             )
             // Metrics endpoint
@@ -56,7 +55,7 @@ impl ApiServer {
             .route("/cache/clear", post(cache_handlers::clear_cache))
             // Diagnostic endpoints
             .route(
-                "/diagnostics/pipeline/:table",
+                "/diagnostics/pipeline/{table}",
                 get(diagnostics::get_pipeline_diagnostics),
             )
             .route(
@@ -68,11 +67,11 @@ impl ApiServer {
                 get(diagnostics::get_connections_diagnostics),
             )
             .route(
-                "/diagnostics/trace/:event_id",
+                "/diagnostics/trace/{event_id}",
                 get(diagnostics::get_event_trace),
             )
             .route(
-                "/diagnostics/replay/:table",
+                "/diagnostics/replay/{table}",
                 post(diagnostics::replay_events),
             )
             .route(
@@ -94,9 +93,9 @@ impl ApiServer {
         let host = &self.config.api.host;
         let port = self.config.api.port;
 
-        let addr: SocketAddr = format!("{}:{}", host, port)
+        let addr: SocketAddr = format!("{host}:{port}")
             .parse()
-            .map_err(|e| MeiliBridgeError::Configuration(format!("Invalid API address: {}", e)))?;
+            .map_err(|e| MeiliBridgeError::Configuration(format!("Invalid API address: {e}")))?;
 
         info!("Starting API server on {}", addr);
 
@@ -108,20 +107,14 @@ impl ApiServer {
                 Ok(listener) => break listener,
                 Err(e) if retry_count < max_retries => {
                     warn!(
-                        "Failed to bind to {}: {}. Retrying in 2 seconds... ({}/{})",
-                        addr,
-                        e,
+                        "Failed to bind to {addr}: {e}. Retrying in 2 seconds... ({}/{max_retries})",
                         retry_count + 1,
-                        max_retries
                     );
                     retry_count += 1;
                     tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
                 }
                 Err(e) => {
-                    error!(
-                        "Failed to bind to {} after {} retries: {}",
-                        addr, max_retries, e
-                    );
+                    error!("Failed to bind to {addr} after {max_retries} retries: {e}");
                     return Err(MeiliBridgeError::Io(e));
                 }
             }

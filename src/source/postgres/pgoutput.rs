@@ -373,7 +373,7 @@ impl PgOutputParser {
             bytes.push(byte);
         }
         String::from_utf8(bytes)
-            .map_err(|e| MeiliBridgeError::Source(format!("Invalid UTF-8 string: {}", e)))
+            .map_err(|e| MeiliBridgeError::Source(format!("Invalid UTF-8 string: {e}")))
     }
 
     pub fn get_relation(&self, relation_id: u32) -> Option<&RelationMessage> {

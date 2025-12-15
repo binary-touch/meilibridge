@@ -173,7 +173,7 @@ impl MeilisearchAdapter {
                 }
                 Err(e) => {
                     result.failed_count += doc_count;
-                    result.add_failure(format!("Upsert error: {}", e));
+                    result.add_failure(format!("Upsert error: {e}"));
                 }
             }
         }
@@ -195,7 +195,7 @@ impl MeilisearchAdapter {
                 }
                 Err(e) => {
                     result.failed_count += delete_count;
-                    result.add_failure(format!("Delete error: {}", e));
+                    result.add_failure(format!("Delete error: {e}"));
                 }
             }
         }
@@ -379,7 +379,7 @@ impl DestinationAdapter for MeilisearchAdapter {
                 }
                 Err(e) => {
                     result.failed_count += chunk.len();
-                    result.add_failure(format!("Import error: {}", e));
+                    result.add_failure(format!("Import error: {e}"));
                 }
             }
         }
@@ -427,8 +427,7 @@ impl DestinationAdapter for MeilisearchAdapter {
                     Ok(())
                 } else {
                     Err(MeiliBridgeError::Meilisearch(format!(
-                        "Index deletion failed: {:?}",
-                        task_info
+                        "Index deletion failed: {task_info:?}",
                     )))
                 }
             }

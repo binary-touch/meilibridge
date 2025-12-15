@@ -52,9 +52,9 @@ impl Position {
 impl fmt::Display for Position {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Position::PostgreSQL { lsn } => write!(f, "pg:{}", lsn),
-            Position::MySQL { file, position } => write!(f, "mysql:{}:{}", file, position),
-            Position::MongoDB { resume_token } => write!(f, "mongo:{}", resume_token),
+            Position::PostgreSQL { lsn } => write!(f, "pg:{lsn}"),
+            Position::MySQL { file, position } => write!(f, "mysql:{file}:{position}"),
+            Position::MongoDB { resume_token } => write!(f, "mongo:{resume_token}"),
         }
     }
 }

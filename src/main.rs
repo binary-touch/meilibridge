@@ -116,7 +116,7 @@ fn init_tracing(log_level: &str) {
         .fmt_fields(tracing_subscriber::fmt::format::DefaultFields::new())
         .event_format(CustomFormatter);
 
-    let filter = format!("meilibridge={},info", log_level);
+    let filter = format!("meilibridge={log_level},info");
     let filter_layer = tracing_subscriber::EnvFilter::try_from_default_env()
         .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new(filter));
 
@@ -167,7 +167,7 @@ where
             } else {
                 name
             };
-            write!(writer, "[{:8}", truncated_name)?;
+            write!(writer, "[{truncated_name:8}")?;
         } else {
             write!(writer, "[{:8}", "unnamed")?;
         }
@@ -178,7 +178,7 @@ where
             .strip_prefix("ThreadId(")
             .and_then(|s| s.strip_suffix(")"))
         {
-            write!(writer, "-{}] ", id_num)?;
+            write!(writer, "-{id_num}] ")?;
         } else {
             write!(writer, "-??] ")?;
         }
@@ -198,7 +198,7 @@ fn load_config(path: Option<&str>) -> Result<Config> {
         }
         None => {
             info!("Loading configuration from default locations");
-            ConfigLoader::load()
+            ConfigLoader::load(None)
         }
     }
 }
@@ -287,7 +287,7 @@ async fn run_service(config: Config) -> Result<()> {
         .with_health_registry(health_registry.clone());
 
     // If using PostgreSQL, create a statement cache reference
-    if let Some(meilibridge::config::SourceConfig::PostgreSQL(ref pg_config)) = &config.source {
+    if let Some(meilibridge::config::SourceConfig::PostgreSQL(pg_config)) = &config.source {
         let cache_config = meilibridge::source::postgres::CacheConfig {
             max_size: pg_config.statement_cache.max_size,
             enabled: pg_config.statement_cache.enabled,
@@ -300,7 +300,7 @@ async fn run_service(config: Config) -> Result<()> {
 
     // Also check multiple sources for PostgreSQL (use first one found)
     for named_source in &config.sources {
-        if let meilibridge::config::SourceConfig::PostgreSQL(ref pg_config) = &named_source.config {
+        if let meilibridge::config::SourceConfig::PostgreSQL(pg_config) = &named_source.config {
             let cache_config = meilibridge::source::postgres::CacheConfig {
                 max_size: pg_config.statement_cache.max_size,
                 enabled: pg_config.statement_cache.enabled,

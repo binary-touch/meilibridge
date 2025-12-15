@@ -1,7 +1,7 @@
 //! Helper functions for at-least-once delivery in the pipeline
 
 use crate::delivery::DeduplicationKey;
-use crate::models::{stream_event::Event, Position};
+use crate::models::{Position, stream_event::Event};
 
 /// Extract position from event
 pub fn extract_position_from_event(event: &Event) -> Option<Position> {

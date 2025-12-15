@@ -83,7 +83,7 @@ mod task_endpoints_tests {
         ];
 
         for state in states {
-            let state_str = format!("{:?}", state);
+            let state_str = format!("{state:?}");
             assert!(!state_str.is_empty());
         }
     }

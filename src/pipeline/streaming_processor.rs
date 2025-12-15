@@ -34,7 +34,7 @@ impl StreamingJsonProcessor {
         // Parse JSON in streaming mode
         let mut de = Deserializer::from_reader(limited_reader);
         let value = Value::deserialize(&mut de)
-            .map_err(|e| MeiliBridgeError::Validation(format!("Failed to parse JSON: {}", e)))?;
+            .map_err(|e| MeiliBridgeError::Validation(format!("Failed to parse JSON: {e}")))?;
 
         // Estimate memory usage
         let estimated_size = Self::estimate_value_size(&value);
@@ -209,7 +209,7 @@ impl ZeroCopyEventRouter {
         // Extract table name without parsing entire document
         if let Some(table_start) = find_json_string_value(event_data, b"\"table\"") {
             let table = std::str::from_utf8(&event_data[table_start.0..table_start.1])
-                .map_err(|e| MeiliBridgeError::Validation(format!("Invalid UTF-8: {}", e)))?;
+                .map_err(|e| MeiliBridgeError::Validation(format!("Invalid UTF-8: {e}")))?;
 
             Ok(EventView {
                 table,
@@ -233,7 +233,7 @@ impl<'a> EventView<'a> {
     /// Parse the full event only when needed
     pub fn parse_full(&self) -> Result<Value> {
         serde_json::from_slice(self.raw_data)
-            .map_err(|e| MeiliBridgeError::Validation(format!("Failed to parse event: {}", e)))
+            .map_err(|e| MeiliBridgeError::Validation(format!("Failed to parse event: {e}")))
     }
 }
 

@@ -154,7 +154,7 @@ impl EventTransformer {
                     .parse::<f64>()
                     .map(|n| Value::Number(serde_json::Number::from_f64(n).unwrap()))
                     .map_err(|_| {
-                        MeiliBridgeError::Pipeline(format!("Cannot convert '{}' to number", s))
+                        MeiliBridgeError::Pipeline(format!("Cannot convert '{s}' to number"))
                     }),
                 _ => Err(MeiliBridgeError::Pipeline(
                     "Cannot convert value to number".to_string(),
@@ -171,8 +171,7 @@ impl EventTransformer {
                 other => Value::Array(vec![other.clone()]),
             }),
             _ => Err(MeiliBridgeError::Pipeline(format!(
-                "Unknown type conversion: {}",
-                to_type
+                "Unknown type conversion: {to_type}",
             ))),
         }
     }

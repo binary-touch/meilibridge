@@ -14,7 +14,7 @@ pub struct RedisDlqStorage {
 impl RedisDlqStorage {
     pub fn new(redis_url: &str, key_prefix: String) -> Result<Self> {
         let client = Client::open(redis_url).map_err(|e| {
-            MeiliBridgeError::Configuration(format!("Failed to create Redis client: {}", e))
+            MeiliBridgeError::Configuration(format!("Failed to create Redis client: {e}"))
         })?;
 
         Ok(Self { client, key_prefix })
@@ -61,10 +61,10 @@ impl DlqStorage for RedisDlqStorage {
             .zadd(&task_key, &entry.id, entry.created_at.timestamp())
             // Add to all entries index
             .zadd(&all_key, &entry.id, entry.created_at.timestamp())
-            .query_async::<_, ()>(&mut conn)
+            .query_async::<()>(&mut conn)
             .await
             .map_err(|e| {
-                MeiliBridgeError::Redis(format!("Failed to store dead letter entry: {}", e))
+                MeiliBridgeError::Redis(format!("Failed to store dead letter entry: {e}"))
             })?;
 
         // Update metrics
@@ -86,7 +86,7 @@ impl DlqStorage for RedisDlqStorage {
         let entry_ids: Vec<String> = conn
             .zrange(&task_key, 0, (limit - 1) as isize)
             .await
-            .map_err(|e| MeiliBridgeError::Redis(format!("Failed to get task entries: {}", e)))?;
+            .map_err(|e| MeiliBridgeError::Redis(format!("Failed to get task entries: {e}")))?;
 
         if entry_ids.is_empty() {
             return Ok(vec![]);
@@ -110,7 +110,7 @@ impl DlqStorage for RedisDlqStorage {
         let entry_data: Option<String> = conn
             .get(&entry_key)
             .await
-            .map_err(|e| MeiliBridgeError::Redis(format!("Failed to get entry: {}", e)))?;
+            .map_err(|e| MeiliBridgeError::Redis(format!("Failed to get entry: {e}")))?;
 
         match entry_data {
             Some(data) => {
@@ -136,9 +136,9 @@ impl DlqStorage for RedisDlqStorage {
                 .del(&entry_key)
                 .zrem(&task_key, id)
                 .zrem(&all_key, id)
-                .query_async::<_, ()>(&mut conn)
+                .query_async::<()>(&mut conn)
                 .await
-                .map_err(|e| MeiliBridgeError::Redis(format!("Failed to remove entry: {}", e)))?;
+                .map_err(|e| MeiliBridgeError::Redis(format!("Failed to remove entry: {e}")))?;
 
             // Update metrics
             self.update_dlq_size_metric(&entry.task_id).await?;
@@ -160,7 +160,7 @@ impl DlqStorage for RedisDlqStorage {
         let entry_ids: Vec<String> = conn
             .zrange(&all_key, 0, -1)
             .await
-            .map_err(|e| MeiliBridgeError::Redis(format!("Failed to get all entries: {}", e)))?;
+            .map_err(|e| MeiliBridgeError::Redis(format!("Failed to get all entries: {e}")))?;
 
         let mut entries_by_task = HashMap::new();
         let mut entries_by_error = HashMap::new();
@@ -209,7 +209,7 @@ impl DlqStorage for RedisDlqStorage {
         let entry_ids: Vec<String> = conn
             .zrange(&task_key, 0, -1)
             .await
-            .map_err(|e| MeiliBridgeError::Redis(format!("Failed to get task entries: {}", e)))?;
+            .map_err(|e| MeiliBridgeError::Redis(format!("Failed to get task entries: {e}")))?;
 
         let count = entry_ids.len();
 
@@ -227,8 +227,8 @@ impl DlqStorage for RedisDlqStorage {
             // Clear the task index
             pipe.del(&task_key);
 
-            pipe.query_async::<_, ()>(&mut conn).await.map_err(|e| {
-                MeiliBridgeError::Redis(format!("Failed to clear task entries: {}", e))
+            pipe.query_async::<()>(&mut conn).await.map_err(|e| {
+                MeiliBridgeError::Redis(format!("Failed to clear task entries: {e}"))
             })?;
 
             info!(
@@ -251,9 +251,10 @@ impl RedisDlqStorage {
         let mut conn = self.get_connection().await?;
         let task_key = self.task_index_key(task_id);
 
-        let size: usize = conn.zcard(&task_key).await.map_err(|e| {
-            MeiliBridgeError::Redis(format!("Failed to get task queue size: {}", e))
-        })?;
+        let size: usize = conn
+            .zcard(&task_key)
+            .await
+            .map_err(|e| MeiliBridgeError::Redis(format!("Failed to get task queue size: {e}")))?;
 
         crate::metrics::DEAD_LETTER_QUEUE_SIZE
             .with_label_values(&[task_id])

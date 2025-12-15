@@ -27,14 +27,14 @@ impl FullSyncHandler {
         let cached_conn = self.connector.get_cached_connection().await?;
 
         // Get total count first (using cached statement)
-        let count_query = format!("SELECT COUNT(*) FROM {}", table);
+        let count_query = format!("SELECT COUNT(*) FROM {table}");
         let count_row = cached_conn.query_one::<()>(&count_query, &[]).await?;
         let total_count: i64 = count_row.get(0);
 
         info!("Total rows to sync for {}: {}", table, total_count);
 
         // Prepare the main query once (will be cached)
-        let select_query = format!("SELECT row_to_json(t) FROM {} t LIMIT $1 OFFSET $2", table);
+        let select_query = format!("SELECT row_to_json(t) FROM {table} t LIMIT $1 OFFSET $2");
 
         let mut offset = 0i64;
         let mut synced_count = 0i64;
@@ -76,7 +76,11 @@ impl FullSyncHandler {
         let stats = cached_conn.cache_stats().await;
         info!(
             "Full sync completed for {}. Synced {} rows. Cache stats: {} hits, {} misses, {:.2}% hit rate",
-            table, synced_count, stats.hits, stats.misses, stats.hit_rate * 100.0
+            table,
+            synced_count,
+            stats.hits,
+            stats.misses,
+            stats.hit_rate * 100.0
         );
 
         // Export metrics

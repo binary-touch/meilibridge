@@ -64,8 +64,7 @@ mod adaptive_batching_tests {
         // The batch size might decrease due to memory pressure or increase due to fast processing
         assert_ne!(
             new_size, initial_size,
-            "Expected batch size to change from {} but it remained the same",
-            initial_size
+            "Expected batch size to change from {initial_size} but it remained the same",
         );
 
         // If it decreased, it should be due to memory pressure (80% of original)
@@ -78,9 +77,7 @@ mod adaptive_batching_tests {
             // Otherwise it should have increased
             assert!(
                 new_size > initial_size,
-                "Expected batch size to increase from {} to {}",
-                initial_size,
-                new_size
+                "Expected batch size to increase from {initial_size} to {new_size}",
             );
         }
     }
@@ -109,9 +106,7 @@ mod adaptive_batching_tests {
             .unwrap();
         assert!(
             new_size < default_size,
-            "Expected batch size to decrease from {} to {}",
-            default_size,
-            new_size
+            "Expected batch size to decrease from {default_size} to {new_size}",
         );
     }
 
@@ -253,7 +248,7 @@ mod adaptive_batching_tests {
         let config = create_test_config();
         let manager = AdaptiveBatchingManager::new(config);
 
-        let tables: Vec<String> = (0..5).map(|i| format!("table_{}", i)).collect();
+        let tables: Vec<String> = (0..5).map(|i| format!("table_{i}")).collect();
 
         // Spawn concurrent tasks updating different tables
         let mut handles = vec![];
@@ -284,8 +279,7 @@ mod adaptive_batching_tests {
         for table in &tables {
             assert!(
                 stats.contains_key(table),
-                "Table {} should have statistics",
-                table
+                "Table {table} should have statistics",
             );
         }
     }
@@ -315,9 +309,7 @@ mod adaptive_batching_tests {
             .unwrap();
         assert!(
             size <= max_size,
-            "Batch size {} should not exceed max {}",
-            size,
-            max_size
+            "Batch size {size} should not exceed max {max_size}",
         );
 
         // Now record very slow processing
@@ -335,9 +327,7 @@ mod adaptive_batching_tests {
             .unwrap();
         assert!(
             final_size >= min_size,
-            "Batch size {} should not go below min {}",
-            final_size,
-            min_size
+            "Batch size {final_size} should not go below min {min_size}",
         );
     }
 }

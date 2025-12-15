@@ -1,19 +1,19 @@
 // Redis checkpoint storage integration tests
 
+use crate::common::containers::Container;
 use crate::common::test_data::create_checkpoint;
 use meilibridge::models::progress::{Checkpoint, Position};
 use redis::Commands;
 use serde_json::json;
-use testcontainers::Container;
+use testcontainers::runners::AsyncRunner;
 use testcontainers_modules::redis::Redis;
 
 #[cfg(test)]
 mod redis_checkpoint_tests {
     use super::*;
 
-    async fn setup_redis(
-    ) -> Result<(Container<'static, Redis>, redis::Client, String), Box<dyn std::error::Error>>
-    {
+    async fn setup_redis()
+    -> Result<(Container<Redis>, redis::Client, String), Box<dyn std::error::Error>> {
         crate::common::setup_redis().await
     }
 
@@ -101,7 +101,7 @@ mod redis_checkpoint_tests {
         let (_container, client, _url) = setup_redis().await.unwrap();
 
         let task_id = "concurrent_task";
-        let key = format!("checkpoint:{}", task_id);
+        let key = format!("checkpoint:{task_id}");
 
         // Simulate concurrent updates
         let mut handles = vec![];
@@ -134,7 +134,7 @@ mod redis_checkpoint_tests {
                     match result {
                         Ok(Some(_)) => break, // Transaction succeeded
                         Ok(None) => continue, // Transaction aborted, retry
-                        Err(e) => panic!("Transaction error: {}", e),
+                        Err(e) => panic!("Transaction error: {e}"),
                     }
                 }
             });
@@ -186,12 +186,10 @@ mod redis_checkpoint_tests {
 
     #[tokio::test]
     async fn test_connection_failure_handling() {
-        // Use static Docker client
-        use crate::common::DOCKER;
-
-        let container = DOCKER.run(Redis);
-        let port = container.get_host_port_ipv4(6379);
-        let url = format!("redis://localhost:{}", port);
+        // Use Redis::default() and start() instead of DOCKER
+        let container = Redis.start().await.unwrap();
+        let port = container.get_host_port_ipv4(6379).await.unwrap();
+        let url = format!("redis://localhost:{port}");
 
         crate::common::containers::wait_for_redis(&url)
             .await
@@ -207,6 +205,7 @@ mod redis_checkpoint_tests {
         let _: Result<(), redis::RedisError> = conn.set(&key, serialized);
 
         // Stop container to simulate connection failure
+        // With ContainerAsync, dropping it stops the container
         drop(container);
 
         // Try to use connection (should fail)
@@ -294,7 +293,7 @@ mod redis_checkpoint_tests {
         let (_container, client, _url) = setup_redis().await.unwrap();
 
         let task_id = "atomic_task";
-        let key = format!("checkpoint:{}", task_id);
+        let key = format!("checkpoint:{task_id}");
 
         // Initial checkpoint
         let mut conn = client.get_connection().unwrap();

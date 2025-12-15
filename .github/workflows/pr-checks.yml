@@ -9,7 +9,7 @@ env:
   RUST_BACKTRACE: 1
   RUSTFLAGS: "-D warnings"
   CARGO_INCREMENTAL: 0
-  RUST_VERSION: "1.82"
+  RUST_VERSION: "1.88"
 
 jobs:
   # Security audit for dependencies
@@ -47,7 +47,7 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: "1.82"
+        toolchain: "1.88"
         components: rustfmt, clippy
     
     - name: Cache dependencies
@@ -79,7 +79,7 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: "1.82"
+        toolchain: "1.88"
     
     - name: Cache dependencies
       uses: Swatinem/rust-cache@v2
@@ -100,7 +100,7 @@ jobs:
     - name: Read MSRV from Cargo.toml
       id: msrv
       run: |
-        MSRV=$(grep -oP 'rust-version = "\K[^"]+' Cargo.toml || echo "1.82")
+        MSRV=$(grep -oP 'rust-version = "\K[^"]+' Cargo.toml || echo "1.88")
         echo "msrv=$MSRV" >> $GITHUB_OUTPUT
     
     - name: Install Rust ${{ steps.msrv.outputs.msrv }}
@@ -125,7 +125,7 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: "1.82"
+        toolchain: "1.88"
     
     - name: Cache dependencies
       uses: Swatinem/rust-cache@v2
@@ -144,7 +144,7 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: "1.82"
+        toolchain: "1.88"
     
     - name: Cache dependencies
       uses: Swatinem/rust-cache@v2
